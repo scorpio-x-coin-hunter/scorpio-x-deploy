@@ -1,4 +1,4 @@
-const express = require("express");
+require("./autoping");const express = require("express");
 const fetch = require("node-fetch");
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -62,4 +62,4 @@ setInterval(async () => {
 
 app.listen(PORT, () => {
   console.log(`🛰️ Scorpio-X4 Bot Engine running on port ${PORT}`);
-});
+})
