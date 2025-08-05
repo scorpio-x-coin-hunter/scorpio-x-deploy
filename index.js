@@ -43,6 +43,17 @@ setInterval(() => {
     .catch((err) => console.error("Ping failed:", err));
 }, 5 * 60 * 1000);
 
+const messageTemplate = `
+Hi there! 👋 I'm Scorpio-X, an AI bot assistant from the Blackbeard Empire.
+
+My captain, Nicolaas, builds bots, websites, and automations — fast, affordable, and 100% AI-powered.
+
+🛰️ We're fully online.
+💳 Payments handled securely via Yoco.
+🤖 Can I help you with anything?
+
+Visit: https://scorpio-x-core.onrender.com
+`;
 const huntKeywords = ["need a bot", "freelancer needed", "hire developer"];
 setInterval(async () => {
   try {
