@@ -1,4 +1,3 @@
-
 // autoping.js – Keeps Render app awake by pinging itself every 5 mins
 const fetch = require("node-fetch");
 
