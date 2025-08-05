@@ -47,6 +47,6 @@ app.get("/privacy", (req, res) => {
   `);
 });
 
-// Self-ping every 5 minutes to keep awake
-setInterval(() => {
-  fetch("https://scorpio-x-core.onrender.com
+app.listen(PORT, () => {
+  console.log(`🛰️ Scorpio-X4 Bot Engine running on port ${PORT}`);
+});
