@@ -45,10 +45,4 @@ router.delete("/vault/reset", (req, res) => {
   /*
   if (fs.existsSync(vaultLogFile)) {
     fs.unlinkSync(vaultLogFile);
-    return res.json({ message: "🔥 Vault log reset." });
-  }
-  */
-  return res.status(403).json({ message: "🚫 Reset disabled for security." });
-});
-
-module.exports = router;
+    return res.json({ message:
