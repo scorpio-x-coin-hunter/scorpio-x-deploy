@@ -41,7 +41,7 @@ router.get("/vault/report", (req, res) => {
 
 // 🔐 Admin Purge Endpoint (clear vault - future use, disabled now)
 router.delete("/vault/reset", (req, res) => {
-  // Uncomment the lines below ONLY if you want reset enabled
+  // Uncomment below ONLY if you want to enable reset (dangerous!)
   /*
   if (fs.existsSync(vaultLogFile)) {
     fs.unlinkSync(vaultLogFile);
