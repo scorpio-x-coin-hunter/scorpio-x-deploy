@@ -1,6 +1,4 @@
-a
-
-// o2-pinging.js – Keeps Render app awake by pinging itself every 5 minutes
+// autoping.js – Keeps Render app awake by pinging itself every 5 mins
 const fetch = require("node-fetch");
 
 const URL = "https://scorpio-x-core.onrender.com"; // Your live Render URL
