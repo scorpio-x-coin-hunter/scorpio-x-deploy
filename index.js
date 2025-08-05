@@ -69,12 +69,12 @@ setInterval(async () => {
   leads.forEach(post => {
     const url = `https://reddit.com${post.permalink}`;
     console.log(`➡️ ${post.title} | ${url}`);
-    
+
     // Simulated reply (auto-talk mode)
     console.log(`🗨️ Auto-Reply Sent to ${post.author}:`);
     console.log(messageTemplate);
   });
-}
+
     } else {
       console.log("🔍 No leads found this round.");
     }
