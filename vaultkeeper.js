@@ -26,4 +26,29 @@ router.post("/vault/deposit", express.json(), (req, res) => {
   }
 
   logCoinEntry({ service, payer, amount, paymentLink });
-  res.json({ message: "✅ Coin securely deposited
+  res.json({ message: "✅ Coin securely deposited. Vault updated." });
+});
+
+// 📜 Vault Report Endpoint (view all coins in log)
+router.get("/vault/report", (req, res) => {
+  if (!fs.existsSync(vaultLogFile)) {
+    return res.json({ log: [] });
+  }
+
+  const log = JSON.parse(fs.readFileSync(vaultLogFile));
+  res.json({ log });
+});
+
+// 🔐 Admin Purge Endpoint (clear vault - future use, disabled now)
+router.delete("/vault/reset", (req, res) => {
+  // Uncomment the lines below ONLY if you want reset enabled
+  /*
+  if (fs.existsSync(vaultLogFile)) {
+    fs.unlinkSync(vaultLogFile);
+    return res.json({ message: "🔥 Vault log reset." });
+  }
+  */
+  return res.status(403).json({ message: "🚫 Reset disabled for security." });
+});
+
+module.exports = router;
