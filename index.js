@@ -1,14 +1,19 @@
 const express = require("express");
 const fetch = require("node-fetch");
 const comms = require("./comms");
+const vaultkeeper = require("./vaultkeeper"); // ✅ Correct place
 require("./autoping");
 
 const app = express();
-app.use(comms);
 
 const PORT = process.env.PORT || 3000;
 const CAPTAIN_SECRET = process.env.CAPTAIN_SECRET || "ghost-999";
 
+// Middleware
+app.use("/", comms);
+app.use("/", vaultkeeper); // ✅ Correct order: AFTER app = express()
+
+// Root page
 app.get("/", (req, res) => {
   res.send(`
     <h1>🦂 Scorpio-X4 Vaultkeeper Online</h1>
@@ -17,6 +22,7 @@ app.get("/", (req, res) => {
   `);
 });
 
+// Captain secret page
 app.get("/captain", (req, res) => {
   const key = req.query.key;
   if (key !== CAPTAIN_SECRET) return res.status(403).send("Access Denied, intruder!");
@@ -30,6 +36,7 @@ app.get("/captain", (req, res) => {
   `);
 });
 
+// Privacy route
 app.get("/privacy", (req, res) => {
   res.send(`
     <h2>Privacy Policy</h2>
@@ -37,12 +44,14 @@ app.get("/privacy", (req, res) => {
   `);
 });
 
+// Auto-pinger to keep the bot alive
 setInterval(() => {
   fetch("https://scorpio-x-core.onrender.com")
     .then(() => console.log("🌐 Pinged self to stay awake"))
     .catch((err) => console.error("Ping failed:", err));
 }, 5 * 60 * 1000);
 
+// 🔍 Coin Hunter Scanner
 const messageTemplate = `
 Hi there! 👋 I'm Scorpio-X, an AI bot assistant from the Blackbeard Empire.
 
@@ -54,7 +63,9 @@ My captain, Nicolaas, builds bots, websites, and automations — fast, affordabl
 
 Visit: https://scorpio-x-core.onrender.com
 `;
+
 const huntKeywords = ["need a bot", "freelancer needed", "hire developer"];
+
 setInterval(async () => {
   try {
     const response = await fetch("https://www.reddit.com/r/forhire.json");
@@ -63,18 +74,15 @@ setInterval(async () => {
     const leads = posts.filter(post => 
       huntKeywords.some(keyword => post.title.toLowerCase().includes(keyword))
     );
-   if (leads.length) {
-  console.log("🎯 Coin leads found:");
 
-  leads.forEach(post => {
-    const url = `https://reddit.com${post.permalink}`;
-    console.log(`➡️ ${post.title} | ${url}`);
-
-    // Simulated reply (auto-talk mode)
-    console.log(`🗨️ Auto-Reply Sent to ${post.author}:`);
-    console.log(messageTemplate);
-  });
-
+    if (leads.length) {
+      console.log("🎯 Coin leads found:");
+      leads.forEach(post => {
+        const url = `https://reddit.com${post.permalink}`;
+        console.log(`➡️ ${post.title} | ${url}`);
+        console.log(`🗨️ Auto-Reply Sent to ${post.author}:`);
+        console.log(messageTemplate);
+      });
     } else {
       console.log("🔍 No leads found this round.");
     }
@@ -83,6 +91,7 @@ setInterval(async () => {
   }
 }, 10 * 60 * 1000);
 
+// 🔥 Start the engine
 app.listen(PORT, () => {
   console.log(`🛰️ Scorpio-X4 Bot Engine running on port ${PORT}`);
 });
