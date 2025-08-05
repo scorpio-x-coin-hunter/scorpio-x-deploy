@@ -1,28 +1,22 @@
 {
   "name": "scorpio-x-core",
-  "version": "1.0.0",
-  "description": "Scorpio-X Bot Engine for Blackbeard Empire — Auto Client Hunter, Comms, and Vaultkeeper System",
+  "version": "1.5.0",
+  "description": "Scorpio-X Blackbeard Empire Bot Core",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "dev": "nodemon index.js"
   },
+  "author": "Captain Nicolaas",
+  "license": "MIT",
   "dependencies": {
     "express": "^4.18.2",
-    "fs": "^0.0.1-security",
-    "path": "^0.12.7",
-    "node-fetch": "^2.6.7"
+    "node-fetch": "^3.3.1"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.22"
   },
   "engines": {
-    "node": ">=14.0.0"
-  },
-  "keywords": [
-    "blackbeard",
-    "scorpio-x",
-    "ai-bot",
-    "freelance-hunter",
-    "vaultkeeper",
-    "automation"
-  ],
-  "author": "Captain Nicolaas J. Els",
-  "license": "MIT"
+    "node": ">=16.0.0"
+  }
 }
