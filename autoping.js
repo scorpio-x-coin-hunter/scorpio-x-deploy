@@ -1,4 +1,3 @@
-// autoping.js - Keeps the GodBot awake by pinging itself every 5 minutes
 const fetch = require("node-fetch");
 
 const URL = "https://scorpio-x-core.onrender.com"; // Your deployed site
