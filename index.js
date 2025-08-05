@@ -1,19 +1,18 @@
+// index.js – Scorpio-X Core Engine (Blackbeard Empire)
 const express = require("express");
 const fetch = require("node-fetch");
 const comms = require("./comms");
-const vaultkeeper = require("./vaultkeeper"); // ✅ Correct place
+const vaultkeeper = require("./vaultkeeper");
 require("./autoping");
 
 const app = express();
-
 const PORT = process.env.PORT || 3000;
-const CAPTAIN_SECRET = process.env.CAPTAIN_SECRET || "ghost-999";
+const CAPTAIN_SECRET = process.env.CAPTAIN_SECRET || "blackbeard-command";
 
-// Middleware
-app.use("/", comms);
-app.use("/", vaultkeeper); // ✅ Correct order: AFTER app = express()
+app.use(comms);
+app.use("/", vaultkeeper);
 
-// Root page
+// 🌐 Main site route
 app.get("/", (req, res) => {
   res.send(`
     <h1>🦂 Scorpio-X4 Vaultkeeper Online</h1>
@@ -22,36 +21,37 @@ app.get("/", (req, res) => {
   `);
 });
 
-// Captain secret page
+// 🧿 Secret Captain Access Panel
 app.get("/captain", (req, res) => {
   const key = req.query.key;
-  if (key !== CAPTAIN_SECRET) return res.status(403).send("Access Denied, intruder!");
+  if (key !== CAPTAIN_SECRET) return res.status(403).send("⛔ Access Denied, intruder!");
+
   res.send(`
     <h2>👑 Welcome, Captain Nicolaas</h2>
     <ul>
-      <li>🛰️ Bot is pinging for clients</li>
-      <li>💳 Yoco Link: <a href="https://pay.yoco.com/r/mojop9" target="_blank">View</a></li>
-      <li>📡 Uptime is protected</li>
+      <li>🛰️ Bot Status: Operational</li>
+      <li>🔗 Vault Access: /vault/report</li>
+      <li>💳 Yoco: <a href="https://pay.yoco.com/r/mojop9" target="_blank">Main Link</a></li>
     </ul>
   `);
 });
 
-// Privacy route
+// 📜 Privacy policy route
 app.get("/privacy", (req, res) => {
   res.send(`
-    <h2>Privacy Policy</h2>
-    <p>This system does not collect or store personal data. All payments are handled securely by Yoco.</p>
+    <h2>🔒 Privacy Policy</h2>
+    <p>No personal data is collected. Payments are handled by Yoco. Bot logs are local only.</p>
   `);
 });
 
-// Auto-pinger to keep the bot alive
+// 🔁 Keep alive (backup self-ping, if needed)
 setInterval(() => {
   fetch("https://scorpio-x-core.onrender.com")
-    .then(() => console.log("🌐 Pinged self to stay awake"))
-    .catch((err) => console.error("Ping failed:", err));
+    .then(() => console.log("🌐 Self-pinged to prevent sleep"))
+    .catch((err) => console.error("Self-ping failed:", err.message));
 }, 5 * 60 * 1000);
 
-// 🔍 Coin Hunter Scanner
+// 🧲 Job hunting engine – optional Reddit scanner
 const messageTemplate = `
 Hi there! 👋 I'm Scorpio-X, an AI bot assistant from the Blackbeard Empire.
 
@@ -65,13 +65,13 @@ Visit: https://scorpio-x-core.onrender.com
 `;
 
 const huntKeywords = ["need a bot", "freelancer needed", "hire developer"];
-
 setInterval(async () => {
   try {
-    const response = await fetch("https://www.reddit.com/r/forhire.json");
-    const data = await response.json();
+    const res = await fetch("https://www.reddit.com/r/forhire.json");
+    const data = await res.json();
     const posts = data.data.children.map(post => post.data);
-    const leads = posts.filter(post => 
+
+    const leads = posts.filter(post =>
       huntKeywords.some(keyword => post.title.toLowerCase().includes(keyword))
     );
 
@@ -80,18 +80,17 @@ setInterval(async () => {
       leads.forEach(post => {
         const url = `https://reddit.com${post.permalink}`;
         console.log(`➡️ ${post.title} | ${url}`);
-        console.log(`🗨️ Auto-Reply Sent to ${post.author}:`);
-        console.log(messageTemplate);
+        console.log(`🗨️ Auto-Reply Sent to ${post.author}:\n${messageTemplate}`);
       });
     } else {
-      console.log("🔍 No leads found this round.");
+      console.log("🔍 No coin leads found this round.");
     }
   } catch (err) {
-    console.error("Client hunter error:", err.message);
+    console.error("🛑 Job hunter error:", err.message);
   }
-}, 10 * 60 * 1000);
+}, 10 * 60 * 1000); // Every 10 minutes
 
-// 🔥 Start the engine
+// 🚀 Launch
 app.listen(PORT, () => {
   console.log(`🛰️ Scorpio-X4 Bot Engine running on port ${PORT}`);
 });
