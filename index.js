@@ -3,7 +3,8 @@ const express = require("express");
 const fetch = require("node-fetch");
 const comms = require("./comms");
 const vaultkeeper = require("./vaultkeeper");
-require("./autoping"); // << THIS IS THE MISSING LINE YOU NEED
+const commands = require("./commands");
+require("./autoping");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -13,6 +14,7 @@ const CAPTAIN_SECRET = process.env.CAPTAIN_SECRET || "ghost-999";
 app.use(express.json());
 app.use(comms);
 app.use(vaultkeeper);
+app.use(commands);
 
 // Root endpoint - status page
 app.get("/", (req, res) => {
@@ -46,6 +48,14 @@ app.get("/privacy", (req, res) => {
     <p>This system does not collect or store personal data. All payments are handled securely by Yoco.</p>
   `);
 });
+
+// Optional: Self-ping for uptime protection (already handled in autoping.js)
+// This one is optional now but safe to keep
+setInterval(() => {
+  fetch("https://scorpio-x-core.onrender.com")
+    .then(() => console.log("🌐 Pinged self to stay awake"))
+    .catch((err) => console.error("Ping failed:", err));
+}, 5 * 60 * 1000);
 
 app.listen(PORT, () => {
   console.log(`🛰️ Scorpio-X4 Bot Engine running on port ${PORT}`);
