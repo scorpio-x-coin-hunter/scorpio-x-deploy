@@ -1,7 +1,8 @@
+// autoping.js – Keeps Render app awake by pinging itself every 5 mins
 const fetch = require("node-fetch");
 
-const URL = "https://scorpio-x-core.onrender.com"; // Your deployed site
-const INTERVAL = 1000 * 60 * 5; // Every 5 minutes
+const URL = "https://scorpio-x-core.onrender.com"; // Your live Render URL
+const INTERVAL = 1000 * 60 * 5; // 5 minutes
 
 setInterval(() => {
   fetch(URL)
