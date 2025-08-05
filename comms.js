@@ -2,10 +2,7 @@
 const express = require("express");
 const router = express.Router();
 
-const triggerWords = [
-  "bot", "freelancer", "hire", "developer", "help", 
-  "website", "app", "automation", "chatgpt"
-];
+const triggerWords = ["bot", "freelancer", "hire", "developer", "help", "website", "app", "automation", "chatgpt"];
 const yocoLink = "https://pay.yoco.com/r/mojop9";
 
 const defaultReply = `
@@ -15,8 +12,7 @@ If you need a bot, website, automation, or AI solution — you're in the right p
 
 💳 To begin, send a secure payment here: ${yocoLink}
 
-Or describe what you need, and I’ll notify the Vaultkeeper.
-`;
+Or describe what you need, and I’ll notify the Vaultkeeper.`;
 
 router.post("/comms", express.json(), (req, res) => {
   const msg = req.body.message?.toLowerCase().trim();
@@ -30,7 +26,9 @@ router.post("/comms", express.json(), (req, res) => {
 
   if (matched) {
     console.log("🎯 Coin-triggering keyword detected!");
-    return res.send({ reply: defaultReply });
+    return res.send({
+      reply: defaultReply
+    });
   }
 
   console.log("🕵️ Message received — no trigger words found.");
