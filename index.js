@@ -63,11 +63,18 @@ setInterval(async () => {
     const leads = posts.filter(post => 
       huntKeywords.some(keyword => post.title.toLowerCase().includes(keyword))
     );
-    if (leads.length) {
-      console.log("🎯 Coin leads found:");
-      leads.forEach(post => {
-        console.log(`➡️ ${post.title} | https://reddit.com${post.permalink}`);
-      });
+   if (leads.length) {
+  console.log("🎯 Coin leads found:");
+
+  leads.forEach(post => {
+    const url = `https://reddit.com${post.permalink}`;
+    console.log(`➡️ ${post.title} | ${url}`);
+    
+    // Simulated reply (auto-talk mode)
+    console.log(`🗨️ Auto-Reply Sent to ${post.author}:`);
+    console.log(messageTemplate);
+  });
+}
     } else {
       console.log("🔍 No leads found this round.");
     }
