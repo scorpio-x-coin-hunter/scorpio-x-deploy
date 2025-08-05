@@ -2,11 +2,11 @@
 const express = require("express");
 const fetch = require("node-fetch");
 const comms = require("./comms");
-app.use(comms);
 const vaultkeeper = require("./vaultkeeper");
 require("./autoping");
 
 const app = express();
+
 const PORT = process.env.PORT || 3000;
 const CAPTAIN_SECRET = process.env.CAPTAIN_SECRET || "ghost-999";
 
