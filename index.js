@@ -6,7 +6,6 @@ const vaultkeeper = require("./vaultkeeper");
 require("./autoping");
 
 const app = express();
-
 const PORT = process.env.PORT || 3000;
 const CAPTAIN_SECRET = process.env.CAPTAIN_SECRET || "ghost-999";
 
@@ -50,52 +49,4 @@ app.get("/privacy", (req, res) => {
 
 // Self-ping every 5 minutes to keep awake
 setInterval(() => {
-  fetch("https://scorpio-x-core.onrender.com")
-    .then(() => console.log("🌐 Pinged self to stay awake"))
-    .catch((err) => console.error("Ping failed:", err));
-}, 5 * 60 * 1000);
-
-// Reddit forhire client hunting and auto-reply simulation
-const messageTemplate = `
-Hi there! 👋 I'm Scorpio-X, an AI bot assistant from the Blackbeard Empire.
-
-My captain, Nicolaas, builds bots, websites, and automations — fast, affordable, and 100% AI-powered.
-
-🛰️ We're fully online.
-💳 Payments handled securely via Yoco.
-🤖 Can I help you with anything?
-
-Visit: https://scorpio-x-core.onrender.com
-`;
-
-const huntKeywords = ["need a bot", "freelancer needed", "hire developer"];
-
-setInterval(async () => {
-  try {
-    const response = await fetch("https://www.reddit.com/r/forhire.json");
-    const data = await response.json();
-    const posts = data.data.children.map(post => post.data);
-    const leads = posts.filter(post => 
-      huntKeywords.some(keyword => post.title.toLowerCase().includes(keyword))
-    );
-
-    if (leads.length) {
-      console.log("🎯 Coin leads found:");
-      leads.forEach(post => {
-        const url = `https://reddit.com${post.permalink}`;
-        console.log(`➡️ ${post.title} | ${url}`);
-        // Simulated auto-reply
-        console.log(`🗨️ Auto-Reply Sent to ${post.author}:`);
-        console.log(messageTemplate);
-      });
-    } else {
-      console.log("🔍 No leads found this round.");
-    }
-  } catch (err) {
-    console.error("Client hunter error:", err.message);
-  }
-}, 10 * 60 * 1000);
-
-app.listen(PORT, () => {
-  console.log(`🛰️ Scorpio-X4 Bot Engine running on port ${PORT}`);
-});
+  fetch("https://scorpio-x-core.onrender.com
