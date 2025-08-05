@@ -2,6 +2,7 @@
 const express = require("express");
 const fetch = require("node-fetch");
 const comms = require("./comms");
+app.use(comms);
 const vaultkeeper = require("./vaultkeeper");
 require("./autoping");
 
