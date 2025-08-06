@@ -1,95 +1,55 @@
-const fs = require('fs');
-const path = require('path');
+// vaultkeeper.js – Full Blackbeard Empire VaultKeeper System v1.5
 
-class VaultKeeper {
-  constructor(vaultFilePath) {
-    this.vaultFilePath = vaultFilePath || path.join(__dirname, 'vault.json');
-    this.vault = this.loadVault();
-  }
+const express = require("express");
+const fs = require("fs");
+const path = require("path");
+const router = express.Router();
 
-  loadVault() {
-    try {
-      if (fs.existsSync(this.vaultFilePath)) {
-        const data = fs.readFileSync(this.vaultFilePath, 'utf8');
-        return JSON.parse(data);
-      } else {
-        // Initialize vault with empty accounts
-        const initialVault = { accounts: {} };
-        fs.writeFileSync(this.vaultFilePath, JSON.stringify(initialVault, null, 2));
-        return initialVault;
-      }
-    } catch (error) {
-      console.error('Error loading vault:', error);
-      return { accounts: {} };
-    }
-  }
+const vaultLogFile = path.join(__dirname, "vault_log.json");
 
-  saveVault() {
-    try {
-      fs.writeFileSync(this.vaultFilePath, JSON.stringify(this.vault, null, 2));
-    } catch (error) {
-      console.error('Error saving vault:', error);
-    }
-  }
+// Helper to log every coin drop into the Vault
+function logCoinEntry(entry) {
+  const log = fs.existsSync(vaultLogFile)
+    ? JSON.parse(fs.readFileSync(vaultLogFile))
+    : [];
 
-  createAccount(accountId) {
-    if (!this.vault.accounts[accountId]) {
-      this.vault.accounts[accountId] = {
-        balance: 0,
-        transactions: []
-      };
-      this.saveVault();
-      return true;
-    }
-    return false; // Account already exists
-  }
-
-  getBalance(accountId) {
-    if (this.vault.accounts[accountId]) {
-      return this.vault.accounts[accountId].balance;
-    }
-    return null; // Account not found
-  }
-
-  deposit(accountId, amount, description = 'Deposit') {
-    if (!this.vault.accounts[accountId]) {
-      this.createAccount(accountId);
-    }
-    this.vault.accounts[accountId].balance += amount;
-    this.vault.accounts[accountId].transactions.push({
-      type: 'deposit',
-      amount,
-      description,
-      date: new Date().toISOString()
-    });
-    this.saveVault();
-    return this.vault.accounts[accountId].balance;
-  }
-
-  withdraw(accountId, amount, description = 'Withdrawal') {
-    if (!this.vault.accounts[accountId]) {
-      return false; // No account
-    }
-    if (this.vault.accounts[accountId].balance >= amount) {
-      this.vault.accounts[accountId].balance -= amount;
-      this.vault.accounts[accountId].transactions.push({
-        type: 'withdrawal',
-        amount,
-        description,
-        date: new Date().toISOString()
-      });
-      this.saveVault();
-      return true;
-    }
-    return false; // Insufficient funds
-  }
-
-  getTransactions(accountId, limit = 50) {
-    if (this.vault.accounts[accountId]) {
-      return this.vault.accounts[accountId].transactions.slice(-limit);
-    }
-    return null; // No account
-  }
+  log.push({ ...entry, timestamp: new Date().toISOString() });
+  fs.writeFileSync(vaultLogFile, JSON.stringify(log, null, 2));
+  console.log("💰 Coin logged to Vault:", entry);
 }
 
-module.exports = VaultKeeper;
+// 🔐 Vault Deposit Endpoint (used by Bots)
+router.post("/vault/deposit", express.json(), (req, res) => {
+  const { service, payer, amount, paymentLink } = req.body;
+
+  if (!service || !payer) {
+    return res.status(400).json({ message: "Missing data." });
+  }
+
+  logCoinEntry({ service, payer, amount, paymentLink });
+  res.json({ message: "✅ Coin securely deposited. Vault updated." });
+});
+
+// 📜 Vault Report Endpoint (view all coins in log)
+router.get("/vault/report", (req, res) => {
+  if (!fs.existsSync(vaultLogFile)) {
+    return res.json({ log: [] });
+  }
+
+  const log = JSON.parse(fs.readFileSync(vaultLogFile));
+  res.json({ log });
+});
+
+// 🔐 Admin Purge Endpoint (clear vault - future use, disabled now)
+router.delete("/vault/reset", (req, res) => {
+  // Uncomment below ONLY if you want to enable reset (dangerous!)
+  /*
+  if (fs.existsSync(vaultLogFile)) {
+    fs.unlinkSync(vaultLogFile);
+    return res.json({ message: "🔥 Vault log reset." });
+  }
+  */
+  return res.status(403).json({ message: "🚫 Reset disabled for security." });
+});
+
+module.exports = router;
