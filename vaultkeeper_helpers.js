@@ -1,34 +1,38 @@
-// vaultkeeper_helpers.js – Helper utilities for Blackbeard Empire VaultKeeper
+// vaultkeeper_helpers.js – Blackbeard VaultKeeper payment link generator helper
+
+/**
+ * Generates a unique payment link for a given service and amount.
+ * This link should be used by bots to send to clients for payment.
+ * You can customize the base URL to your payment processing platform.
+ */
 
 const crypto = require("crypto");
 
-// Base Yoco link prefix for generating new payment links dynamically
-// (This should be your official Yoco API endpoint or link generator)
-const BASE_YOCO_LINK = "https://pay.yoco.com/r/";
+const BASE_PAYMENT_URL = "https://your-custom-payments.com/pay"; // CHANGE to your actual payment processor base URL
 
-// Example list of service codes or tokens (could be expanded or integrated with DB)
-const serviceCodes = {
-  "CV Creation": "7v8zDd",
-  "Study Buddy": "mOzlDp",
-  "Proofreading": "2Bo0Dn",
-  // Add all your services here, or dynamically generate later
-};
-
-// Generate a unique payment link string for a given service and amount
-function generatePaymentLink(serviceName, amount) {
-  // If you want to use service-specific codes, find it here:
-  const serviceCode = serviceCodes[serviceName] || "default";
-
-  // Create a unique token based on serviceName, amount, and current timestamp
-  const uniqueString = `${serviceName}-${amount}-${Date.now()}`;
-
-  const hash = crypto.createHash("sha256").update(uniqueString).digest("hex").slice(0, 8);
-
-  // Construct the final payment link with unique token appended (customize as per Yoco API)
-  // For now, simulate a unique payment link by appending token after base link + service code
-  const paymentLink = `${BASE_YOCO_LINK}${serviceCode}-${hash}`;
-
-  return paymentLink;
+/**
+ * Generates a unique hash string to append to payment link
+ * @param {string} service 
+ * @param {number} amount 
+ * @returns {string} unique token
+ */
+function generateUniqueToken(service, amount) {
+  const raw = `${service}-${amount}-${Date.now()}-${Math.random()}`;
+  return crypto.createHash("sha256").update(raw).digest("hex").slice(0, 10);
 }
 
-module.exports = { generatePaymentLink };
+/**
+ * Generate a full payment link for the service and amount
+ * @param {string} service 
+ * @param {number} amount 
+ * @returns {string} URL
+ */
+function generatePaymentLink(service, amount) {
+  const token = generateUniqueToken(service, amount);
+  // You can add more query params as needed (like service name, amount, token, etc)
+  return `${BASE_PAYMENT_URL}?service=${encodeURIComponent(service)}&amount=${amount}&token=${token}`;
+}
+
+module.exports = {
+  generatePaymentLink
+};
