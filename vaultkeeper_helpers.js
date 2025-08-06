@@ -1,38 +1,48 @@
-// vaultkeeper_helpers.js – Blackbeard VaultKeeper payment link generator helper
+// vaultkeeperHelper.js – Blackbeard Empire VaultKeeper Utility Functions v1.0
 
-/**
- * Generates a unique payment link for a given service and amount.
- * This link should be used by bots to send to clients for payment.
- * You can customize the base URL to your payment processing platform.
- */
+const fs = require("fs");
+const path = require("path");
 
-const crypto = require("crypto");
+const vaultLogFile = path.join(__dirname, "vault_log.json");
 
-const BASE_PAYMENT_URL = "https://your-custom-payments.com/pay"; // CHANGE to your actual payment processor base URL
-
-/**
- * Generates a unique hash string to append to payment link
- * @param {string} service 
- * @param {number} amount 
- * @returns {string} unique token
- */
-function generateUniqueToken(service, amount) {
-  const raw = `${service}-${amount}-${Date.now()}-${Math.random()}`;
-  return crypto.createHash("sha256").update(raw).digest("hex").slice(0, 10);
+// Read vault log safely
+function readVaultLog() {
+  if (!fs.existsSync(vaultLogFile)) return [];
+  try {
+    const data = fs.readFileSync(vaultLogFile);
+    return JSON.parse(data);
+  } catch (err) {
+    console.error("⚠️ Error reading vault log:", err);
+    return [];
+  }
 }
 
-/**
- * Generate a full payment link for the service and amount
- * @param {string} service 
- * @param {number} amount 
- * @returns {string} URL
- */
-function generatePaymentLink(service, amount) {
-  const token = generateUniqueToken(service, amount);
-  // You can add more query params as needed (like service name, amount, token, etc)
-  return `${BASE_PAYMENT_URL}?service=${encodeURIComponent(service)}&amount=${amount}&token=${token}`;
+// Write vault log safely
+function writeVaultLog(log) {
+  try {
+    fs.writeFileSync(vaultLogFile, JSON.stringify(log, null, 2));
+  } catch (err) {
+    console.error("⚠️ Error writing vault log:", err);
+  }
+}
+
+// Log a coin transaction (deposit or withdrawal)
+function logCoinEntry(entry) {
+  const log = readVaultLog();
+  log.push({ ...entry, timestamp: new Date().toISOString() });
+  writeVaultLog(log);
+  console.log("💰 VaultKeeper logged entry:", entry);
+}
+
+// Calculate current vault balance
+function calculateVaultBalance() {
+  const log = readVaultLog();
+  return log.reduce((sum, entry) => sum + (entry.amount || 0), 0);
 }
 
 module.exports = {
-  generatePaymentLink
+  readVaultLog,
+  writeVaultLog,
+  logCoinEntry,
+  calculateVaultBalance,
 };
