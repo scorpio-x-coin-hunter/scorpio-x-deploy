@@ -1,4 +1,4 @@
-// vaultkeeper.js – Scorpio-X Blackbeard Empire VaultKeeper v1.6 (Complete & Self-Contained)
+// vaultkeeper.js – Full Blackbeard Empire VaultKeeper System v2.0
 
 const express = require("express");
 const fs = require("fs");
@@ -6,25 +6,32 @@ const path = require("path");
 const router = express.Router();
 
 const vaultLogFile = path.join(__dirname, "vault_log.json");
-const VAULT_WITHDRAWAL_PASSWORD = process.env.VAULT_PASSWORD || "blackbeard-ghost-999"; // Secure password for withdrawals
 
-// Helper: Read vault log
+// Password to authorize withdrawals — change this before deployment!
+const WITHDRAWAL_PASSWORD = process.env.VAULT_PASS || "blackbeard-secret-2025";
+
+// Helper: Read vault log file safely
 function readVaultLog() {
   if (!fs.existsSync(vaultLogFile)) return [];
   try {
-    return JSON.parse(fs.readFileSync(vaultLogFile));
-  } catch (e) {
-    console.error("⚠️ Vault log read error:", e);
+    const data = fs.readFileSync(vaultLogFile);
+    return JSON.parse(data);
+  } catch (err) {
+    console.error("⚠️ Error reading vault log:", err);
     return [];
   }
 }
 
-// Helper: Write vault log
+// Helper: Write vault log file safely
 function writeVaultLog(log) {
-  fs.writeFileSync(vaultLogFile, JSON.stringify(log, null, 2));
+  try {
+    fs.writeFileSync(vaultLogFile, JSON.stringify(log, null, 2));
+  } catch (err) {
+    console.error("⚠️ Error writing vault log:", err);
+  }
 }
 
-// Log a new coin deposit entry
+// Helper: Log coin deposit entry
 function logCoinEntry(entry) {
   const log = readVaultLog();
   log.push({ ...entry, timestamp: new Date().toISOString() });
@@ -32,66 +39,61 @@ function logCoinEntry(entry) {
   console.log("💰 Coin logged to Vault:", entry);
 }
 
-// Calculate total amount in vault
-function getVaultBalance() {
+// Helper: Calculate total vault balance
+function calculateVaultBalance() {
   const log = readVaultLog();
-  return log.reduce((sum, entry) => sum + (entry.amount || 0), 0);
+  return log.reduce((total, entry) => total + (entry.amount || 0), 0);
 }
 
-// 🔐 Deposit coins into vault (Bots use this)
+// 🔐 Deposit endpoint: bots call this to add coins to vault
 router.post("/vault/deposit", express.json(), (req, res) => {
   const { service, payer, amount, paymentLink } = req.body;
 
   if (!service || !payer || !amount || amount <= 0) {
-    return res.status(400).json({ message: "Missing or invalid deposit data." });
+    return res.status(400).json({ message: "Missing or invalid data." });
   }
 
   logCoinEntry({ service, payer, amount, paymentLink });
-  return res.json({ message: "✅ Coin securely deposited. Vault updated.", currentBalance: getVaultBalance() });
+  res.json({ message: "✅ Coin securely deposited. Vault updated." });
 });
 
-// 📜 Get vault report (All deposits logged)
+// 📜 Vault report: Get full log and total balance
 router.get("/vault/report", (req, res) => {
-  res.json({ log: readVaultLog(), currentBalance: getVaultBalance() });
+  const log = readVaultLog();
+  const total = calculateVaultBalance();
+  res.json({ totalBalance: total, log });
 });
 
-// 🔐 Withdraw funds from vault (Admin only)
+// 🔐 Withdrawal endpoint: Admin withdraws money by providing password & Yoco link
 router.post("/vault/withdraw", express.json(), (req, res) => {
   const { password, amount, yocoLink } = req.body;
 
-  if (password !== VAULT_WITHDRAWAL_PASSWORD) {
-    return res.status(403).json({ message: "🛑 Access Denied: Incorrect password." });
+  if (password !== WITHDRAWAL_PASSWORD) {
+    return res.status(403).json({ message: "🚫 Unauthorized: Wrong password." });
   }
 
   if (!amount || amount <= 0) {
     return res.status(400).json({ message: "Invalid withdrawal amount." });
   }
 
-  const currentBalance = getVaultBalance();
+  const currentBalance = calculateVaultBalance();
   if (amount > currentBalance) {
-    return res.status(400).json({ message: "Insufficient funds in vault." });
+    return res.status(400).json({ message: "Insufficient vault balance." });
   }
 
-  if (!yocoLink) {
-    return res.status(400).json({ message: "Missing Yoco payment link for withdrawal." });
+  if (!yocoLink || typeof yocoLink !== "string") {
+    return res.status(400).json({ message: "Invalid Yoco payment link." });
   }
 
-  // Log withdrawal as negative entry
-  logCoinEntry({ service: "WITHDRAWAL", payer: "Captain", amount: -amount, paymentLink: yocoLink });
+  // Log the withdrawal as a negative transaction
+  logCoinEntry({ service: "Withdrawal", payer: "Captain Nicolaas", amount: -amount, paymentLink: yocoLink });
 
-  return res.json({
-    message: `💸 Withdrawal of ${amount} processed to Yoco link.`,
-    currentBalance: getVaultBalance(),
-  });
+  res.json({ message: `💸 Withdrawal of ${amount} initiated to your Yoco link.` });
 });
 
-// 🔥 Dangerous Reset (disabled by default, uncomment to enable)
-// router.delete("/vault/reset", (req, res) => {
-//   if (fs.existsSync(vaultLogFile)) {
-//     fs.unlinkSync(vaultLogFile);
-//     return res.json({ message: "🔥 Vault log reset." });
-//   }
-//   return res.json({ message: "Vault log not found." });
-// });
+// 🚫 Vault reset endpoint - Disabled for security
+router.delete("/vault/reset", (req, res) => {
+  return res.status(403).json({ message: "🚫 Reset disabled for security." });
+});
 
 module.exports = router;
