@@ -1,7 +1,7 @@
 {
   "name": "scorpio-x-core",
-  "version": "1.5.0",
-  "description": "Scorpio-X Blackbeard Empire Bot Core",
+  "version": "2.0.0",
+  "description": "Scorpio-X Blackbeard Empire Core Engine – Vaultkeeper, Comms, AutoPing & Commands",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
@@ -18,5 +18,20 @@
   },
   "engines": {
     "node": ">=16.0.0"
+  },
+  "keywords": [
+    "blackbeard",
+    "empire",
+    "vaultkeeper",
+    "scorpio-x",
+    "bot",
+    "automation",
+    "nodejs",
+    "freelance",
+    "ai-assistant"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/blackbeard-empire/scorpio-x-core"
   }
 }
