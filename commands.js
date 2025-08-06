@@ -1,32 +1,20 @@
-// commands.js – Blackbeard Captain Override & Command Center v2.0
-const express = require("express");
-const router = express.Router();
+// commands.js – Blackbeard Captain Override & Command Center v2.5 const express = require("express"); const router = express.Router();
 
 const CAPTAIN_SECRET = process.env.CAPTAIN_SECRET || "blackbeard-command";
 
-router.post("/command", express.json(), (req, res) => {
-  const { message } = req.body;
-  if (!message) return res.status(400).json({ reply: "⚠️ No command received." });
+// 🧠 Available Commands: // "blackbeard-command" (or your secret password) // "status report" => current system status // "show vault" => redirect to vault report log // Add more as needed
 
-  const msg = message.toLowerCase().trim();
+router.post("/command", express.json(), (req, res) => { const { message } = req.body; if (!message) return res.status(400).json({ reply: "No command received." });
 
-  // Secret Captain Command
-  if (msg === CAPTAIN_SECRET) {
-    console.log("🗝️ Captain override activated.");
-    return res.send({
-      reply: "🏴‍☠️ Captain Nicolaas, all bots are operational. Vault secured. No threats detected."
-    });
-  }
+const msg = message.toLowerCase().trim();
 
-  // Built-in Status Report
-  if (msg.includes("status report")) {
-    return res.send({
-      reply: "🛰️ Systems online. Coin radar active. Ping stable. Awaiting treasure..."
-    });
-  }
+// 🗝️ Secret Captain Command if (msg === CAPTAIN_SECRET) { console.log("🗝️ Captain override accessed."); return res.send({ reply: "🏴‍☠️ Captain, the Blackbeard Empire reports: All bots operational. Vault secure. No threats detected." }); }
 
-  // Incomplete or Unrecognized Commands
-  return res.send({ reply: "🤖 Unknown command. Please refer to Vaultkeeper or Empire HQ." });
-});
+// 🚀 Status Report if (msg.includes("status report")) { return res.send({ reply: "🚐 Systems online. Coin radar active. Uptime stable. Bots sweeping sea lanes." }); }
+
+// 📆 Vault Report if (msg.includes("show vault")) { return res.redirect("/vault/report"); }
+
+// ❌ Fallback res.send({ reply: "⚠️ Unknown command. Please try again or contact Vaultkeeper." }); });
 
 module.exports = router;
+
