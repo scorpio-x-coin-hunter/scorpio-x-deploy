@@ -18,13 +18,10 @@ router.post("/command", express.json(), (req, res) => {
     });
   }
 
-  // Status report command
+  // Expandable future commands
   if (msg.includes("status report")) {
     return res.send({ reply: "🛰️ Systems online. Coin scanning enabled. Ping frequency stable." });
   }
-
-  // Add more commands here as needed in the future
-  // e.g. "shutdown", "restart", "vault status", etc.
 
   res.send({ reply: "⚠️ Unknown command. Please try again or contact Vaultkeeper." });
 });
