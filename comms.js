@@ -1,39 +1,62 @@
-// comms.js – Client Message Tower & Bot Auto-Reply Engine
+// index.js – Scorpio-X Blackbeard Empire Core Server
 const express = require("express");
-const router = express.Router();
+const fetch = require("node-fetch");
+const comms = require("./comms");
+const vaultkeeper = require("./vaultkeeper");
+const commands = require("./commands");
+require("./autoping");
 
-const triggerWords = [
-  "bot", "freelancer", "hire", "developer", "help", "website",
-  "app", "automation", "chatgpt", "resume", "cv", "design",
-  "services", "writing", "ai", "logo", "copywriting", "job"
-];
+const app = express();
+const PORT = process.env.PORT || 3000;
+const CAPTAIN_SECRET = process.env.CAPTAIN_SECRET || "ghost-999";
 
-const defaultReply = `
-🤖 Hello! I'm Scorpio-X from the ⚓ Blackbeard Empire.
+// Middleware
+app.use(express.json());
+app.use(comms);
+app.use(vaultkeeper);
+app.use(commands);
 
-I can help you with bots, websites, content, CVs, automation, and more.
-
-💳 To begin, choose a service: https://scorpio-x-core.onrender.com
-
-Need something custom? Just tell me what you need, and I’ll notify the Vaultkeeper.`;
-
-router.post("/comms", express.json(), (req, res) => {
-  const msg = req.body.message?.toLowerCase().trim();
-  console.log("📨 Client Message Received:", msg);
-
-  if (!msg) {
-    return res.status(400).send({ reply: "⚠️ No message received. Try again." });
-  }
-
-  const matched = triggerWords.some(word => msg.includes(word));
-
-  if (matched) {
-    console.log("🎯 Coin-triggering keyword detected!");
-    return res.send({ reply: defaultReply });
-  }
-
-  console.log("🕵️ Message received — no trigger words found.");
-  return res.send({ reply: "📬 Message received. We’ll be in touch shortly, Captain is watching..." });
+// Root endpoint - status page
+app.get("/", (req, res) => {
+  res.send(`
+    <h1>🦂 Scorpio-X4 Vaultkeeper Online</h1>
+    <p>Status: Active, scanning for coin...</p>
+    <a href="https://pay.yoco.com/r/mojop9" target="_blank">💰 Pay Captain Nicolaas</a>
+  `);
 });
 
-module.exports = router;
+// Captain dashboard
+app.get("/captain", (req, res) => {
+  const key = req.query.key;
+  if (key !== CAPTAIN_SECRET) {
+    return res.status(403).send("Access Denied, intruder!");
+  }
+  res.send(`
+    <h2>👑 Welcome, Captain Nicolaas</h2>
+    <ul>
+      <li>🛰️ All bots are operational</li>
+      <li>💳 Yoco Vault: <a href="https://pay.yoco.com/r/mojop9" target="_blank">View Coin</a></li>
+      <li>📡 Ping frequency stable</li>
+      <li>🔐 Secure Mode: ON</li>
+    </ul>
+  `);
+});
+
+// Privacy info
+app.get("/privacy", (req, res) => {
+  res.send(`
+    <h2>Privacy Policy</h2>
+    <p>No personal data is collected or stored by the Blackbeard Empire bots. Payments are secure via Yoco.</p>
+  `);
+});
+
+// Uptime pinger backup (secondary fail-safe)
+setInterval(() => {
+  fetch("https://scorpio-x-core.onrender.com")
+    .then(() => console.log("🌐 [Backup Ping] Keeping server awake."))
+    .catch(err => console.error("🛑 Ping error:", err));
+}, 5 * 60 * 1000);
+
+// Start engine
+app.listen(PORT, () => {
+  console.log(`🛰️ Scorpio-X4 Core Engine online at port ${
