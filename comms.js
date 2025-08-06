@@ -1,47 +1,43 @@
+// comms.js – Blackbeard Empire Client Message Engine v1.4 (Complete & Automated)
+
 const express = require("express");
 const router = express.Router();
-const { generatePaymentLink } = require("./vaultkeeper_helpers");
+const crypto = require("crypto");
+const services = require("./services");
 
-const triggerWords = [
-  "bot", "freelancer", "hire", "developer", "help",
-  "website", "app", "automation", "chatgpt", "ai", "scorpio"
-];
+// Helper: Generate unique payment link for each service and transaction
+function generatePaymentLink(serviceName) {
+  // Here we generate a unique ID and link per service dynamically
+  const uniqueId = crypto.randomBytes(4).toString("hex"); // 8-char hex id
+  // This link is a placeholder, replace with your real Yoco link generator if available
+  return `https://pay.yoco.com/r/${serviceName.toLowerCase().replace(/\s+/g, "")}-${uniqueId}`;
+}
 
-const defaultService = {
-  name: "General AI Help",
-  keywords: ["help", "ai", "assistant"],
-  amount: 100, // Example default amount
-};
+// Endpoint: Receive client request and respond with payment link & info
+router.post("/comms/request", express.json(), (req, res) => {
+  const { serviceKeyword, clientName } = req.body;
 
-router.post("/comms", express.json(), async (req, res) => {
-  const msg = req.body.message?.toLowerCase().trim();
-  console.log("📨 Client Message Received:", msg);
-
-  if (!msg) {
-    return res.status(400).send({ reply: "⚠️ No message received. Try again." });
+  if (!serviceKeyword || !clientName) {
+    return res.status(400).json({ message: "Missing serviceKeyword or clientName." });
   }
 
-  const matched = triggerWords.some(word => msg.includes(word));
+  // Find service by matching keywords
+  const service = services.find((svc) =>
+    svc.keywords.some((kw) => kw.toLowerCase() === serviceKeyword.toLowerCase())
+  );
 
-  if (matched) {
-    const paymentLink = await generatePaymentLink(defaultService);
-
-    console.log("🎯 Coin-triggering keyword detected!");
-    return res.send({
-      reply: `
-🤖 Hello! I'm Scorpio-X from the Blackbeard Empire.
-
-If you need a bot, website, automation, or AI help — you've landed at the right dock.
-
-💳 Click to pay and begin: ${paymentLink}
-
-I'll notify the Vaultkeeper and we’ll begin shortly.
-      `.trim()
-    });
+  if (!service) {
+    return res.status(404).json({ message: "Service not found." });
   }
 
-  console.log("🕵️ Message received — no trigger words found.");
-  return res.send({ reply: "📬 Message logged. We'll reply shortly if it's urgent." });
+  // Generate unique payment link for this transaction
+  const paymentLink = generatePaymentLink(service.name);
+
+  // Respond with the service name and unique payment link
+  res.json({
+    message: `Hello ${clientName}, to proceed with ${service.name}, please pay via the link below.`,
+    paymentLink,
+  });
 });
 
 module.exports = router;
