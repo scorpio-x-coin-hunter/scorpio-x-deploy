@@ -1,19 +1,25 @@
-// comms.js – Client Message Tower & Bot Auto-Reply Engine
+// comms.js – Blackbeard Message Tower + Payment Redirect Engine v2.0
 
 const express = require("express");
 const router = express.Router();
 
-const triggerWords = ["bot", "freelancer", "hire", "developer", "help", "website", "app", "automation", "chatgpt"];
-const yocoLink = "https://pay.yoco.com/r/mojop9";
+const triggerWords = ["bot", "freelancer", "hire", "developer", "help", "website", "app", "automation", "chatgpt", "cv", "services"];
 
-const defaultReply = `
-🤖 Hello! I'm Scorpio-X, your AI assistant from the Blackbeard Empire.
+// 🔁 Simulated dynamic vault link (replace with real vault API call if needed)
+function getVaultLink() {
+  return "https://blackbeard-vault.fakepaylink.com/pay"; // Placeholder
+}
 
-If you need a bot, website, automation, or AI solution — you're in the right place.
+const defaultReply = () => `
+🤖 Hello! I’m Scorpio-X, your AI assistant from the Blackbeard Empire.
 
-💳 To begin, send a secure payment here: ${yocoLink}
+If you need a bot, website, CV, or AI solution — you're in the right place.
 
-Or describe what you need, and I’ll notify the Vaultkeeper.`;
+💳 Secure payments are handled by the Empire Vault.
+👉 Begin here: ${getVaultLink()}
+
+Or describe what you need, and I’ll alert the Vaultkeeper.
+`;
 
 router.post("/comms", express.json(), (req, res) => {
   const msg = req.body.message?.toLowerCase().trim();
@@ -26,14 +32,12 @@ router.post("/comms", express.json(), (req, res) => {
   const matched = triggerWords.some(word => msg.includes(word));
 
   if (matched) {
-    console.log("🎯 Coin-triggering keyword detected!");
-    return res.send({
-      reply: defaultReply
-    });
+    console.log("🎯 Trigger word detected. Responding with Vault link.");
+    return res.send({ reply: defaultReply() });
   }
 
-  console.log("🕵️ Message received — no trigger words found.");
-  return res.send({ reply: "📬 Message logged. We'll reply shortly if it's urgent." });
+  console.log("🕵️ Message received. No trigger found.");
+  return res.send({ reply: "📬 Message logged. A human agent will respond soon if needed." });
 });
 
 module.exports = router;
