@@ -1,55 +1,62 @@
-// vaultkeeper.js – Full Blackbeard Empire VaultKeeper System v1.5
+// vaultkeeper.js – Blackbeard VaultKeeper v2.0
 
 const express = require("express");
 const fs = require("fs");
 const path = require("path");
 const router = express.Router();
 
-const vaultLogFile = path.join(__dirname, "vault_log.json");
+const VAULT_FILE = path.join(__dirname, "vault_log.json");
+const WITHDRAW_PASS = process.env.WITHDRAW_PASS || "blackbeard-vault-pass";
 
-// Helper to log every coin drop into the Vault
+// 💾 Log deposit into vault
 function logCoinEntry(entry) {
-  const log = fs.existsSync(vaultLogFile)
-    ? JSON.parse(fs.readFileSync(vaultLogFile))
+  const log = fs.existsSync(VAULT_FILE)
+    ? JSON.parse(fs.readFileSync(VAULT_FILE))
     : [];
-
   log.push({ ...entry, timestamp: new Date().toISOString() });
-  fs.writeFileSync(vaultLogFile, JSON.stringify(log, null, 2));
-  console.log("💰 Coin logged to Vault:", entry);
+  fs.writeFileSync(VAULT_FILE, JSON.stringify(log, null, 2));
+  console.log("💰 Vault deposit:", entry);
 }
 
-// 🔐 Vault Deposit Endpoint (used by Bots)
+// 📥 Deposit coins to vault
 router.post("/vault/deposit", express.json(), (req, res) => {
   const { service, payer, amount, paymentLink } = req.body;
-
-  if (!service || !payer) {
-    return res.status(400).json({ message: "Missing data." });
+  if (!service || !payer || !amount) {
+    return res.status(400).json({ message: "❌ Missing data." });
   }
 
   logCoinEntry({ service, payer, amount, paymentLink });
-  res.json({ message: "✅ Coin securely deposited. Vault updated." });
+  res.json({ message: "✅ Deposit logged in vault." });
 });
 
-// 📜 Vault Report Endpoint (view all coins in log)
-router.get("/vault/report", (req, res) => {
-  if (!fs.existsSync(vaultLogFile)) {
-    return res.json({ log: [] });
+// 📤 Withdraw coins from vault with password
+router.post("/vault/withdraw", express.json(), (req, res) => {
+  const { amount, destination, passcode } = req.body;
+
+  if (passcode !== WITHDRAW_PASS) {
+    return res.status(403).json({ message: "🚫 Invalid passcode. Access denied." });
   }
 
-  const log = JSON.parse(fs.readFileSync(vaultLogFile));
+  if (!amount || !destination) {
+    return res.status(400).json({ message: "❌ Missing amount or destination." });
+  }
+
+  // You can expand this logic later to integrate payout APIs
+  console.log(`💸 Withdrawal requested: R${amount} to ${destination}`);
+
+  res.json({ message: `💸 R${amount} will be transferred to ${destination}. Vault locked again.` });
+});
+
+// 📜 Vault transaction log
+router.get("/vault/report", (req, res) => {
+  if (!fs.existsSync(VAULT_FILE)) return res.json({ log: [] });
+  const log = JSON.parse(fs.readFileSync(VAULT_FILE));
   res.json({ log });
 });
 
-// 🔐 Admin Purge Endpoint (clear vault - future use, disabled now)
+// ⚠️ Disabled vault reset (can be unlocked manually)
 router.delete("/vault/reset", (req, res) => {
-  // Uncomment below ONLY if you want to enable reset (dangerous!)
-  /*
-  if (fs.existsSync(vaultLogFile)) {
-    fs.unlinkSync(vaultLogFile);
-    return res.json({ message: "🔥 Vault log reset." });
-  }
-  */
-  return res.status(403).json({ message: "🚫 Reset disabled for security." });
+  return res.status(403).json({ message: "❌ Vault reset is disabled for safety." });
 });
 
 module.exports = router;
