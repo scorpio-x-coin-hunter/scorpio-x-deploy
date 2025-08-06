@@ -29,11 +29,26 @@
       margin: 10px 0;
       border-left: 5px solid #f1c40f;
       border-radius: 5px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
-    .service a {
-      color: #66fcf1;
-      text-decoration: none;
+    .service button {
+      background: #45a29e;
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 5px;
+      cursor: pointer;
       font-weight: bold;
+    }
+    #paymentLink {
+      margin-top: 20px;
+      padding: 15px;
+      background: #1c1c1c;
+      border-radius: 8px;
+      border: 1px solid #333;
+      word-break: break-all;
     }
     form {
       background: #1c1c1c;
@@ -67,6 +82,8 @@
 
   <div id="services"></div>
 
+  <div id="paymentLink"></div>
+
   <h2>📬 Custom Order Request</h2>
   <form action="https://formspree.io/f/mnqelpdo" method="POST">
     <input type="text" name="name" placeholder="Your name" required />
@@ -77,73 +94,117 @@
 
   <script>
     const services = [
-      { name: "CV Creation", link: "https://pay.yoco.com/r/7v8zDd" },
-      { name: "Study Buddy", link: "https://pay.yoco.com/r/mOzlDp" },
-      { name: "Proofreading", link: "https://pay.yoco.com/r/2Bo0Dn" },
-      { name: "Website Design", link: "https://pay.yoco.com/r/2DevRY" },
-      { name: "App Development", link: "https://pay.yoco.com/r/4njGOA" },
-      { name: "Automation Consulting", link: "https://pay.yoco.com/r/2LbDwR" },
-      { name: "Free Launcher CV", link: "https://pay.yoco.com/r/71kZxa" },
-      { name: "Chatbot Development", link: "https://pay.yoco.com/r/4G0xe9" },
-      { name: "Cover Letter", link: "https://pay.yoco.com/r/mMGWyq" },
-      { name: "Business Plan", link: "https://pay.yoco.com/r/4xjzq1" },
-      { name: "Logo Design", link: "https://pay.yoco.com/r/4arnwD" },
-      { name: "Social Media Content", link: "https://pay.yoco.com/r/mojGZa" },
-      { name: "Deck Design", link: "https://pay.yoco.com/r/4WXMJedeck" },
-      { name: "Online Course", link: "https://pay.yoco.com/r/2ArOvw" },
-      { name: "Technical Writing", link: "https://pay.yoco.com/r/4Z1Yee" },
-      { name: "Translation", link: "https://pay.yoco.com/r/2Bo0yn" },
-      { name: "SEO Optimization", link: "https://pay.yoco.com/r/7yjMo0" },
-      { name: "Content Writing", link: "https://pay.yoco.com/r/2QkryN" },
-      { name: "Email Marketing", link: "https://pay.yoco.com/r/4G0xzd" },
-      { name: "Video Editing", link: "https://pay.yoco.com/r/4njGvB" },
-      { name: "Voice Over", link: "https://pay.yoco.com/r/mdjk0x" },
-      { name: "Digital Marketing", link: "https://pay.yoco.com/r/mEQyB6" },
-      { name: "Data Analysis", link: "https://pay.yoco.com/r/25dL1v" },
-      { name: "Project Management", link: "https://pay.yoco.com/r/7rjoWq" },
-      { name: "Graphic Design", link: "https://pay.yoco.com/r/mojGnZ" },
-      { name: "Social Media Management", link: "https://pay.yoco.com/r/4WXMyv" },
-      { name: "Copywriting", link: "https://pay.yoco.com/r/4jjMGY" },
-      { name: "Website Maintenance", link: "https://pay.yoco.com/r/73ZKV5" },
-      { name: "IT Support", link: "https://pay.yoco.com/r/2YgnbW" },
-      { name: "Resume Optimization", link: "https://pay.yoco.com/r/mRnkQo" },
-      { name: "Online Tutoring", link: "https://pay.yoco.com/r/mOzlnj" },
-      { name: "AI Chatbot Setup", link: "https://pay.yoco.com/r/7v8zWo" },
-      { name: "Business Naming", link: "https://pay.yoco.com/r/2wjJpk" },
-      { name: "Sales Funnel", link: "https://pay.yoco.com/r/2Dev0w" },
-      { name: "E-Commerce Setup", link: "https://pay.yoco.com/r/4kjxDW" },
-      { name: "Content Strategy", link: "https://pay.yoco.com/r/mdjkwx" },
-      { name: "Email Newsletter Setup", link: "https://pay.yoco.com/r/mEQyp6" },
-      { name: "Video Production", link: "https://pay.yoco.com/r/25dLPv" },
-      { name: "Podcast Production", link: "https://pay.yoco.com/r/mojGQZproduction" },
-      { name: "Online Workshop", link: "https://pay.yoco.com/r/2VL1gg" },
-      { name: "SEO Audit", link: "https://pay.yoco.com/r/2PJlWE" },
-      { name: "Website SEO", link: "https://pay.yoco.com/r/73ZKP5" },
-      { name: "Lead Generation", link: "https://pay.yoco.com/r/2Bo0rB" },
-      { name: "Online Reputation", link: "https://pay.yoco.com/r/2wjJGk" },
-      { name: "Newsletter Writing", link: "https://pay.yoco.com/r/mej5b0" },
-      { name: "UX/UI Design", link: "https://pay.yoco.com/r/2YgnwN" },
-      { name: "Cybersecurity Assessment", link: "https://pay.yoco.com/r/4arno9" },
-      { name: "eBook Creation", link: "https://pay.yoco.com/r/2Jy3g3" },
-      { name: "Presentation Design", link: "https://pay.yoco.com/r/4qjEan" },
-      { name: "Technical Support", link: "https://pay.yoco.com/r/2LbDEQ" }
+      "CV Creation",
+      "Study Buddy",
+      "Proofreading",
+      "Website Design",
+      "App Development",
+      "Automation Consulting",
+      "Free Launcher CV",
+      "Chatbot Development",
+      "Cover Letter",
+      "Business Plan",
+      "Logo Design",
+      "Social Media Content",
+      "Deck Design",
+      "Online Course",
+      "Technical Writing",
+      "Translation",
+      "SEO Optimization",
+      "Content Writing",
+      "Email Marketing",
+      "Video Editing",
+      "Voice Over",
+      "Digital Marketing",
+      "Data Analysis",
+      "Project Management",
+      "Graphic Design",
+      "Social Media Management",
+      "Copywriting",
+      "Website Maintenance",
+      "IT Support",
+      "Resume Optimization",
+      "Online Tutoring",
+      "AI Chatbot Setup",
+      "Business Naming",
+      "Sales Funnel",
+      "E-Commerce Setup",
+      "Content Strategy",
+      "Email Newsletter Setup",
+      "Video Production",
+      "Podcast Production",
+      "Online Workshop",
+      "SEO Audit",
+      "Website SEO",
+      "Lead Generation",
+      "Online Reputation",
+      "Newsletter Writing",
+      "UX/UI Design",
+      "Cybersecurity Assessment",
+      "eBook Creation",
+      "Presentation Design",
+      "Technical Support"
     ];
 
     const serviceContainer = document.getElementById("services");
     const searchInput = document.getElementById("search");
+    const paymentLinkDiv = document.getElementById("paymentLink");
 
+    // Render services filtered by search
     function renderServices(filter = "") {
+      paymentLinkDiv.innerHTML = ""; // Clear previous payment link
       serviceContainer.innerHTML = "";
-      const filtered = services.filter(service => service.name.toLowerCase().includes(filter.toLowerCase()));
+      const filtered = services.filter(service =>
+        service.toLowerCase().includes(filter.toLowerCase())
+      );
+
       filtered.forEach(service => {
         const el = document.createElement("div");
         el.className = "service";
-        el.innerHTML = `<strong>${service.name}</strong><br/><a href="${service.link}" target="_blank">💳 Pay Now</a>`;
+
+        const button = document.createElement("button");
+        button.textContent = "💳 Pay Now";
+        button.onclick = () => requestPaymentLink(service);
+
+        el.innerHTML = `<strong>${service}</strong>`;
+        el.appendChild(button);
+
         serviceContainer.appendChild(el);
       });
     }
 
+    // Request payment link from backend API
+    async function requestPaymentLink(serviceName) {
+      paymentLinkDiv.textContent = "⏳ Generating payment link...";
+      try {
+        const response = await fetch("/command", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: `payment ${serviceName.toLowerCase()}` }),
+        });
+
+        const data = await response.json();
+
+        if (data.reply && data.reply.includes("http")) {
+          paymentLinkDiv.innerHTML = `<strong>Payment link for ${serviceName}:</strong><br/><a href="${extractUrl(data.reply)}" target="_blank">${extractUrl(data.reply)}</a>`;
+        } else {
+          paymentLinkDiv.textContent = "❌ Failed to get payment link. Please try again later.";
+        }
+      } catch (err) {
+        paymentLinkDiv.textContent = "❌ Error contacting payment system.";
+        console.error(err);
+      }
+    }
+
+    // Helper to extract URL from the backend reply string
+    function extractUrl(text) {
+      const urlRegex = /(https?:\/\/[^\s]+)/g;
+      const matches = text.match(urlRegex);
+      return matches ? matches[0] : "";
+    }
+
     searchInput.addEventListener("input", () => renderServices(searchInput.value));
+
     renderServices();
   </script>
 
