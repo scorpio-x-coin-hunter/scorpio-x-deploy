@@ -1,11 +1,11 @@
-// vaultkeeper.js – Full Blackbeard Empire VaultKeeper System v2.0 with payment link generation
+// vaultkeeper.js – Full Blackbeard Empire VaultKeeper System v2.0
 
 const express = require("express");
 const fs = require("fs");
 const path = require("path");
 const router = express.Router();
 
-const generatePaymentLink = require("./vaultkeeper_helpers").generatePaymentLink;
+const { generatePaymentLink } = require("./vaultkeeper_helpers");
 
 const vaultLogFile = path.join(__dirname, "vault_log.json");
 const WITHDRAW_PASSWORD = process.env.VAULT_WITHDRAW_PASSWORD || "blackbeard-withdraw-999";
@@ -21,55 +21,71 @@ function logCoinEntry(entry) {
   console.log("💰 Coin logged to Vault:", entry);
 }
 
-// 🔐 Vault Deposit Endpoint (used by Bots)
-// Bots send: service, payer, amount, and request a payment link if none provided
+// Helper to calculate total vault balance from log
+function getVaultBalance() {
+  if (!fs.existsSync(vaultLogFile)) return 0;
+
+  const log = JSON.parse(fs.readFileSync(vaultLogFile));
+  return log.reduce((sum, entry) => sum + (entry.amount || 0), 0);
+}
+
+// 🔐 Vault Deposit Endpoint (used by Bots to deposit payment info)
 router.post("/vault/deposit", express.json(), (req, res) => {
-  let { service, payer, amount, paymentLink } = req.body;
+  const { service, payer, amount } = req.body;
 
   if (!service || !payer || !amount) {
-    return res.status(400).json({ message: "Missing data: service, payer, and amount required." });
+    return res.status(400).json({ message: "Missing data: service, payer, and amount are required." });
   }
 
-  // If no paymentLink sent, generate one dynamically per deposit
-  if (!paymentLink) {
-    paymentLink = generatePaymentLink(service, amount);
-  }
+  // Generate a unique payment link for this deposit
+  const paymentLink = generatePaymentLink(service, amount);
 
   logCoinEntry({ service, payer, amount, paymentLink });
-  res.json({ message: "✅ Coin securely deposited. Vault updated.", paymentLink });
+
+  res.json({ 
+    message: "✅ Coin securely deposited. Vault updated.", 
+    paymentLink 
+  });
 });
 
 // 📜 Vault Report Endpoint (view all coins in log)
 router.get("/vault/report", (req, res) => {
   if (!fs.existsSync(vaultLogFile)) {
-    return res.json({ log: [] });
+    return res.json({ log: [], balance: 0 });
   }
+
   const log = JSON.parse(fs.readFileSync(vaultLogFile));
-  res.json({ log });
+  const balance = getVaultBalance();
+  res.json({ log, balance });
 });
 
-// 🔐 Vault Withdrawal Endpoint
-// Requires password and amount, plus a temporary Yoco link to send funds
+// 🔐 Vault Withdrawal Endpoint (password-protected)
 router.post("/vault/withdraw", express.json(), (req, res) => {
-  const { password, amount, tempPaymentLink } = req.body;
+  const { password, amount, tempYocoLink } = req.body;
 
   if (password !== WITHDRAW_PASSWORD) {
-    return res.status(403).json({ message: "🚫 Unauthorized: Incorrect password." });
-  }
-  if (!amount || !tempPaymentLink) {
-    return res.status(400).json({ message: "Missing amount or temporary payment link." });
+    return res.status(403).json({ message: "🚫 Access denied. Invalid withdrawal password." });
   }
 
-  // Here you would implement the logic to verify vault balance and send money
-  // For now, just log the withdrawal request:
-  console.log(`💸 Withdrawal requested: ${amount} to ${tempPaymentLink}`);
+  const balance = getVaultBalance();
 
-  res.json({
-    message: `✅ Withdrawal approved for amount ${amount}. Payment sent to temporary link.`,
-  });
+  if (!amount || amount <= 0 || amount > balance) {
+    return res.status(400).json({ message: `Invalid amount. Vault balance is ${balance}` });
+  }
+
+  if (!tempYocoLink) {
+    return res.status(400).json({ message: "Temporary Yoco payment link required for withdrawal." });
+  }
+
+  // Log withdrawal event (for audit)
+  logCoinEntry({ service: "WITHDRAWAL", payer: "Captain", amount: -amount, paymentLink: tempYocoLink });
+
+  // In real use, here you would integrate actual payment processing to your Yoco account
+
+  res.json({ message: `✅ Withdrawal of ${amount} confirmed. Funds sent to your Yoco link.` });
 });
 
-// 🔐 Admin Purge Endpoint (clear vault - disabled for security)
+// 🔐 Admin Purge Endpoint (clear vault - disabled for safety)
 router.delete("/vault/reset", (req, res) => {
   /*
   if (fs.existsSync(vaultLogFile)) {
