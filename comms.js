@@ -1,23 +1,21 @@
-// comms.js – Blackbeard Empire Client Message Tower & Bot Auto-Reply Engine v2.0
+// comms.js – Client Message Tower & Bot Auto-Reply Engine
 const express = require("express");
 const router = express.Router();
 
 const triggerWords = [
   "bot", "freelancer", "hire", "developer", "help", "website",
-  "app", "automation", "chatgpt", "ai", "design", "build", "copywriting", "cv"
+  "app", "automation", "chatgpt", "resume", "cv", "design",
+  "services", "writing", "ai", "logo", "copywriting", "job"
 ];
 
-const yocoLink = "https://pay.yoco.com/r/mojop9";
-
 const defaultReply = `
-🤖 Hello! I'm Scorpio-X, your AI agent from the Blackbeard Empire.
+🤖 Hello! I'm Scorpio-X from the ⚓ Blackbeard Empire.
 
-If you're looking for a bot, website, CV, automation, or AI-powered service — you're in the right dock.
+I can help you with bots, websites, content, CVs, automation, and more.
 
-💳 You can begin here: ${yocoLink}
+💳 To begin, choose a service: https://scorpio-x-core.onrender.com
 
-Or describe your task and I’ll notify the Vaultkeeper. 🔐
-`;
+Need something custom? Just tell me what you need, and I’ll notify the Vaultkeeper.`;
 
 router.post("/comms", express.json(), (req, res) => {
   const msg = req.body.message?.toLowerCase().trim();
@@ -34,8 +32,8 @@ router.post("/comms", express.json(), (req, res) => {
     return res.send({ reply: defaultReply });
   }
 
-  console.log("🕵️ No trigger words found. Logging message for review.");
-  return res.send({ reply: "📬 Message received. We'll reply shortly if needed." });
+  console.log("🕵️ Message received — no trigger words found.");
+  return res.send({ reply: "📬 Message received. We’ll be in touch shortly, Captain is watching..." });
 });
 
 module.exports = router;
