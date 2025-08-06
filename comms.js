@@ -1,38 +1,42 @@
-// comms.js – Client Message Tower & Bot Auto-Reply Engine
+// comms.js – Client Message Tower & Bot Auto-Reply Engine v2.0
 const express = require("express");
 const router = express.Router();
 
-const triggerWords = ["bot", "freelancer", "hire", "developer", "help", "website", "app", "automation", "chatgpt"];
+const triggerWords = [
+  "bot", "freelancer", "hire", "developer", "help", "website", "app", "automation", "chatgpt",
+  "cv", "resume", "proofread", "study", "voice", "marketing", "design", "writing", "content"
+];
+
 const yocoLink = "https://pay.yoco.com/r/mojop9";
 
 const defaultReply = `
-🤖 Hello! I'm Scorpio-X, your AI assistant from the Blackbeard Empire.
+🤖 Ahoy! I'm Scorpio-X, your digital assistant from the Blackbeard Empire.
 
-If you need a bot, website, automation, or AI solution — you're in the right place.
+🛠️ Services: CVs, websites, bots, tutoring, writing, voice, design, AI & more.
+💳 Start your job: <a href="${yocoLink}" target="_blank">Click here to pay securely</a>
 
-💳 To begin, send a secure payment here: ${yocoLink}
-
-Or describe what you need, and I’ll notify the Vaultkeeper.`;
+Or send your custom job details now — and I’ll alert the Vaultkeeper. 🏴‍☠️
+`;
 
 router.post("/comms", express.json(), (req, res) => {
   const msg = req.body.message?.toLowerCase().trim();
-  console.log("📨 Client Message Received:", msg);
+  console.log("📨 Incoming Client Message:", msg);
 
   if (!msg) {
-    return res.status(400).send({ reply: "⚠️ No message received. Try again." });
+    return res.status(400).send({ reply: "⚠️ No message received. Try again, sailor." });
   }
 
   const matched = triggerWords.some(word => msg.includes(word));
 
   if (matched) {
-    console.log("🎯 Coin-triggering keyword detected!");
+    console.log("🎯 Trigger keyword matched. Sending default offer.");
     return res.send({
       reply: defaultReply
     });
   }
 
-  console.log("🕵️ Message received — no trigger words found.");
-  return res.send({ reply: "📬 Message logged. We'll reply shortly if it's urgent." });
+  console.log("🕵️ Message logged. No trigger keywords found.");
+  return res.send({ reply: "📬 Message received. A Vaultkeeper will reply shortly if urgent." });
 });
 
 module.exports = router;
