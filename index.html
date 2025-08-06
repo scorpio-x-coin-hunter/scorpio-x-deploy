@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -74,22 +75,31 @@
     }
   </style>
 </head>
-<body>  <h1>🥜 Blackbeard Empire Services</h1>
-  <input type="text" id="search" placeholder="Search for a service...">  <div id="services"></div>
-  <div id="paymentLink"></div>  <h2>📬 Custom Order Request</h2>
+<body>  
+  <h1>🥜 Blackbeard Empire Services</h1>
+  <input type="text" id="search" placeholder="Search for a service...">  
+  <div id="services"></div>
+  <div id="paymentLink"></div>  
+  
+  <h2>📬 Custom Order Request</h2>
   <form action="https://formspree.io/f/mnqelpdo" method="POST">
     <input type="text" name="name" placeholder="Your name" required />
     <input type="email" name="email" placeholder="Your email" required />
     <textarea name="request" placeholder="What do you need?" rows="5" required></textarea>
     <button type="submit">Submit Request</button>
-  </form>  <!-- 💬 Blackbeard Live Chat Box -->  <div id="chatBox" style="position:fixed;bottom:20px;right:20px;width:300px;background:#1f2833;border:1px solid #444;border-radius:10px;box-shadow:0 0 10px #000;z-index:1000;overflow:hidden;">
+  </form>  
+  
+  <!-- 💬 Blackbeard Live Chat Box -->
+  <div id="chatBox" style="position:fixed;bottom:20px;right:20px;width:300px;background:#1f2833;border:1px solid #444;border-radius:10px;box-shadow:0 0 10px #000;z-index:1000;overflow:hidden;">
     <div style="background:#45a29e;padding:10px;color:#fff;font-weight:bold;">💬 Chat with Blackbeard Bot</div>
     <div id="chatMessages" style="padding:10px;height:200px;overflow-y:auto;font-size:14px;background:#0b0c10;color:#f8f8f2;"></div>
     <div style="display:flex;border-top:1px solid #333;">
       <input type="text" id="chatInput" placeholder="Type your message..." style="flex:1;padding:8px;border:none;background:#1c1c1c;color:white;">
       <button onclick="sendMessage()" style="padding:8px 12px;background:#45a29e;border:none;color:white;font-weight:bold;">Send</button>
     </div>
-  </div>  <script>
+  </div>
+  
+  <script>
     const services = ["CV Creation", "Study Buddy", "Proofreading", "Website Design", "App Development", "Automation Consulting"];
 
     const serviceContainer = document.getElementById("services");
@@ -141,31 +151,35 @@
     searchInput.addEventListener("input", () => renderServices(searchInput.value));
     renderServices();
 
-    async function sendMessage() {
-      const input = document.getElementById("chatInput");
-      const message = input.value.trim();
-      if (!message) return;
-      const chat = document.getElementById("chatMessages");
-      chat.innerHTML += `<div><strong>You:</strong> ${message}</div>`;
-      input.value = "";
-      chat.scrollTop = chat.scrollHeight;
-
-      try {
-        const res = await fetch("/command", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message })
-        });
-        const data = await res.json();
-        if (data.reply) {
-          chat.innerHTML += `<div><strong>🥜 Blackbeard:</strong> ${data.reply}</div>`;
-        } else {
-          chat.innerHTML += `<div><strong>🥜 Blackbeard:</strong> ⚠️ No response received.</div>`;
-        }
-      } catch (err) {
-        chat.innerHTML += `<div><strong>🥜 Blackbeard:</strong> ❌ Error talking to server.</div>`;
-      }
-      chat.scrollTop = chat.scrollHeight;
+    // === Blackbeard Live Chat Box Script ===
+    async function sendMessage() {  
+      const input = document.getElementById("chatInput");  
+      const message = input.value.trim();  
+      if (!message) return;  
+  
+      const chat = document.getElementById("chatMessages");  
+      chat.innerHTML += `<div><strong>You:</strong> ${message}</div>`;  
+      input.value = "";  
+      chat.scrollTop = chat.scrollHeight;  
+  
+      try {  
+        const res = await fetch("/command", {  
+          method: "POST",  
+          headers: { "Content-Type": "application/json" },  
+          body: JSON.stringify({ message })  
+        });  
+        const data = await res.json();  
+        if (data.reply) {  
+          chat.innerHTML += `<div><strong>🦜 Blackbeard:</strong> ${data.reply}</div>`;  
+        } else {  
+          chat.innerHTML += `<div><strong>🦜 Blackbeard:</strong> ⚠️ No response received.</div>`;  
+        }  
+      } catch (err) {  
+        chat.innerHTML += `<div><strong>🦜 Blackbeard:</strong> ❌ Error talking to server.</div>`;  
+      }  
+  
+      chat.scrollTop = chat.scrollHeight;  
     }
-  </script></body>
+  </script>
+</body>
 </html>
