@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Blackbeard Chat Bot</title>
+<style>
+  body { font-family: Arial, sans-serif; background: #0a0a0a; color: #eee; margin: 0; padding: 0; }
+  #chat-container { max-width: 600px; margin: 2rem auto; background: #111; border-radius: 8px; padding: 1rem; }
+  #messages { height: 400px; overflow-y: scroll; border: 1px solid #333; padding: 1rem; background: #222; }
+  .message { margin-bottom: 1rem; }
+  .user { color: #6cf; }
+  .bot { color: #9f6; }
+  #input-form { display: flex; margin-top: 1rem; }
+  #input-msg { flex: 1; padding: 0.5rem; font-size: 1rem; border-radius: 4px 0 0 4px; border: none; }
+  #send-btn { padding: 0.5rem 1rem; font-size: 1rem; border: none; background: #29a329; color: white; cursor: pointer; border-radius: 0 4px 4px 0; }
+  #send-btn:hover { background: #3fdb3f; }
+</style>
+</head>
+<body>
+  <div id="chat-container">
+    <h2>Blackbeard Chat Bot</h2>
+    <div id="messages"></div>
+    <form id="input-form">
+      <input type="text" id="input-msg" placeholder="Type your command or message..." autocomplete="off" required />
+      <button type="submit" id="send-btn">Send</button>
+    </form>
+  </div>
+
+<script>
+  const messagesEl = document.getElementById('messages');
+  const form = document.getElementById('input-form');
+  const input = document.getElementById('input-msg');
+
+  function addMessage(text, sender) {
+    const div = document.createElement('div');
+    div.classList.add('message', sender);
+    div.textContent = text;
+    messagesEl.appendChild(div);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+  }
+
+  async function sendMessage(msg) {
+    addMessage(msg, 'user');
+
+    try {
+      const res = await fetch('/command', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: msg })
+      });
+      const data = await res.json();
+      if (data.reply) {
+        addMessage(data.reply, 'bot');
+      } else {
+        addMessage('⚠️ No reply from server.', 'bot');
+      }
+    } catch (error) {
+      addMessage('⚠️ Error communicating with server.', 'bot');
+    }
+  }
+
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    const msg = input.value.trim();
+    if (!msg) return;
+    sendMessage(msg);
+    input.value = '';
+    input.focus();
+  });
+
+  // Initial welcome message
+  addMessage('🦜 Ahoy! I am Blackbeard, your trusted vault keeper and assistant. Ask me about services or payments!', 'bot');
+</script>
+</body>
+</html>
