@@ -1,11 +1,11 @@
-// index.js – Scorpio-X Blackbeard Empire Core Server v2.1 (Full Integrated Version)
+// index.js – Scorpio-X Blackbeard Empire Core Server v2.2 (Fully Integrated, Standard Bank Only)
 
 const express = require("express");
 const fetch = require("node-fetch");
-const comms = require("./comms");
-const vaultkeeper = require("./vaultkeeper");
-const commands = require("./commands");
-require("./autoping");
+const comms = require("./comms");         // 📡 Client Message Engine (assumed present)
+const vaultkeeper = require("./vaultkeeper"); // 💰 Vault Manager with deposits, withdrawals, reports
+const commands = require("./commands");   // 🧠 Captain Commands Handler
+require("./autoping");                    // Autoping script to keep awake (assumed present)
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -13,20 +13,20 @@ const CAPTAIN_SECRET = process.env.CAPTAIN_SECRET || "ghost-999";
 
 // Middleware
 app.use(express.json());
-app.use(comms);          // 📡 Client Message Engine
-app.use(vaultkeeper);    // 💰 Vault Manager (with deposits, withdrawals, reports)
-app.use(commands);       // 🧠 Captain Commands
+app.use(comms);
+app.use(vaultkeeper);
+app.use(commands);
 
 // Root Status Page
 app.get("/", (req, res) => {
   res.send(`
     <h1>🦂 Scorpio-X Core | Blackbeard Online</h1>
     <p>Status: <strong>Active</strong><br/>Bots: Scanning for clients...<br/>Vaultkeeper: Watching the gold.</p>
-    <p><a href="https://pay.yoco.com/r/mojop9" target="_blank">💳 Pay Captain Nicolaas</a></p>
+    <p><strong>Note:</strong> All payments go directly to Standard Bank account with unique references.</p>
   `);
 });
 
-// Captain's Secret Control Panel
+// Captain Secret Control Panel
 app.get("/captain", (req, res) => {
   const key = req.query.key;
   if (key !== CAPTAIN_SECRET) {
@@ -37,8 +37,8 @@ app.get("/captain", (req, res) => {
     <ul>
       <li>🛰️ Bot Status: ACTIVE</li>
       <li>💰 Vault Tracking: ENABLED</li>
-      <li>📡 Yoco Link: <a href="https://pay.yoco.com/r/mojop9" target="_blank">View</a></li>
       <li>🛡️ Render Ping Protection: ON</li>
+      <li>💳 Payment Method: Standard Bank Direct (No Yoco links)</li>
     </ul>
   `);
 });
@@ -47,11 +47,11 @@ app.get("/captain", (req, res) => {
 app.get("/privacy", (req, res) => {
   res.send(`
     <h2>🔐 Privacy Policy</h2>
-    <p>This system collects NO personal data. All transactions are securely processed via Yoco.</p>
+    <p>This system collects NO personal data. All transactions are securely processed via Standard Bank with unique payment references for accurate tracking.</p>
   `);
 });
 
-// Backup Self-Ping (Optional, in case autoping fails)
+// Backup Self-Ping (Optional)
 setInterval(() => {
   fetch("https://scorpio-x-core.onrender.com")
     .then(() => console.log("🌐 Pinged self to stay awake"))
