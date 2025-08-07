@@ -7,7 +7,7 @@ const router = express.Router();
 
 const vaultLogFile = path.join(__dirname, "vault_log.json");
 
-// Password to authorize withdrawals — change this before deployment!
+// Password to authorize withdrawals — set securely in environment or default
 const WITHDRAWAL_PASSWORD = process.env.VAULT_PASS || "blackbeard-secret-2025";
 
 // Your Standard Bank details for client payments:
@@ -15,7 +15,7 @@ const BANK_NAME = "Standard Bank";
 const ACCOUNT_NAME = "Nicolaas Johannes Els";
 const ACCOUNT_NUMBER = "10135452331"; // Your Mymo Account
 const ACCOUNT_TYPE = "Mymo Account";
-const BANK_CODE = "051001"; // Standard Bank branch code (can adjust if needed)
+const BANK_CODE = "051001"; // Standard Bank branch code
 
 // Helper: Read vault log file safely
 function readVaultLog() {
@@ -55,9 +55,14 @@ function calculateVaultBalance() {
 // Helper: Generate a unique payment reference code for each client deposit
 function generatePaymentReference(service, payer) {
   // Format: BB + date + random 5-digit + payer initials (max 3 letters)
-  const datePart = new Date().toISOString().slice(0,10).replace(/-/g,""); // YYYYMMDD
+  const datePart = new Date().toISOString().slice(0, 10).replace(/-/g, ""); // YYYYMMDD
   const randomPart = Math.floor(10000 + Math.random() * 90000);
-  const payerInitials = payer.split(" ").map(w => w[0]).join("").slice(0,3).toUpperCase() || "XXX";
+  const payerInitials = payer
+    .split(" ")
+    .map((w) => w[0])
+    .join("")
+    .slice(0, 3)
+    .toUpperCase() || "XXX";
   return `BB${datePart}${randomPart}${payerInitials}`;
 }
 
@@ -74,24 +79,30 @@ router.post("/vault/deposit", express.json(), (req, res) => {
 
   // Build the payment info string clients will receive to pay you
   const paymentInfo = `
-  Please pay R${amount.toFixed(2)} to:
-  Bank: ${BANK_NAME}
-  Account Name: ${ACCOUNT_NAME}
-  Account Number: ${ACCOUNT_NUMBER}
-  Account Type: ${ACCOUNT_TYPE}
-  Branch Code: ${BANK_CODE}
-  Payment Reference: ${paymentReference}
+Please pay R${amount.toFixed(2)} to:
+Bank: ${BANK_NAME}
+Account Name: ${ACCOUNT_NAME}
+Account Number: ${ACCOUNT_NUMBER}
+Account Type: ${ACCOUNT_TYPE}
+Branch Code: ${BANK_CODE}
+Payment Reference: ${paymentReference}
 
-  Use the Payment Reference exactly as it appears to ensure your payment is correctly recorded.
-  `;
+Use the Payment Reference exactly as it appears to ensure your payment is correctly recorded.
+`;
 
-  // Log the deposit with the payment reference as paymentLink for tracking
-  logCoinEntry({ service, payer, amount, paymentLink: paymentReference });
+  // Log the deposit with the payment reference for tracking
+  logCoinEntry({
+    service,
+    payer,
+    amount,
+    paymentReference,
+  });
 
   // Respond to the client with the payment instructions
-  res.json({ 
-    message: "✅ Coin deposit initiated. Please use the following bank details to complete payment.",
-    paymentInfo: paymentInfo.trim()
+  res.json({
+    message:
+      "✅ Coin deposit initiated. Please use the following bank details to complete payment.",
+    paymentInfo: paymentInfo.trim(),
   });
 });
 
@@ -102,7 +113,7 @@ router.get("/vault/report", (req, res) => {
   res.json({ totalBalance: total, log });
 });
 
-// 🔐 Withdrawal endpoint: Admin withdraws money by providing password & Yoco or bank link (optional)
+// 🔐 Withdrawal endpoint: Admin withdraws money by providing password & optional note
 router.post("/vault/withdraw", express.json(), (req, res) => {
   const { password, amount, paymentLink } = req.body;
 
@@ -119,8 +130,13 @@ router.post("/vault/withdraw", express.json(), (req, res) => {
     return res.status(400).json({ message: "Insufficient vault balance." });
   }
 
-  // Log the withdrawal as a negative transaction, optionally with paymentLink
-  logCoinEntry({ service: "Withdrawal", payer: "Captain Nicolaas", amount: -amount, paymentLink: paymentLink || null });
+  // Log the withdrawal as a negative transaction, optionally with paymentLink/note
+  logCoinEntry({
+    service: "Withdrawal",
+    payer: "Captain Nicolaas",
+    amount: -amount,
+    paymentReference: paymentLink || null,
+  });
 
   res.json({ message: `💸 Withdrawal of R${amount.toFixed(2)} logged.` });
 });
