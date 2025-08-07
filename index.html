@@ -3,182 +3,82 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Blackbeard Empire Services</title>
+  <title>Blackbeard Services</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #0b0c10;
-      color: #f8f8f2;
-      padding: 20px;
-    }
-    h1 {
-      text-align: center;
-      color: #f1c40f;
-    }
-    input[type="text"] {
-      width: 100%;
-      padding: 12px;
-      margin: 20px 0;
-      border: none;
-      border-radius: 8px;
-      font-size: 16px;
-    }
-    .service {
-      background: #1f2833;
-      padding: 15px;
-      margin: 10px 0;
-      border-left: 5px solid #f1c40f;
-      border-radius: 5px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .service button {
-      background: #45a29e;
-      color: white;
-      border: none;
-      padding: 10px 16px;
-      border-radius: 5px;
-      cursor: pointer;
-      font-weight: bold;
-    }
-    #paymentLink {
-      margin-top: 20px;
-      padding: 15px;
-      background: #1c1c1c;
-      border-radius: 8px;
-      border: 1px solid #333;
-      word-break: break-word;
-    }
-    form {
-      background: #1c1c1c;
-      padding: 20px;
-      margin-top: 40px;
-      border: 1px solid #333;
-      border-radius: 8px;
-    }
-    form input, form textarea {
-      width: 100%;
-      padding: 10px;
-      margin: 10px 0;
-      border: none;
-      border-radius: 5px;
-    }
-    form button {
-      background: #45a29e;
-      color: white;
-      padding: 12px;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight: bold;
-    }
+    body { font-family: Arial, sans-serif; background: #111; color: #f4f4f4; padding: 20px; }
+    h1 { color: gold; }
+    .service-card { background: #222; border: 1px solid #444; padding: 15px; margin: 10px 0; border-radius: 8px; }
+    .service-card h2 { margin: 0 0 10px; color: #fff; }
+    .btn { padding: 10px 15px; background: gold; color: #000; border: none; cursor: pointer; border-radius: 5px; }
+    .btn:hover { background: orange; }
+    #chat-output { max-height: 300px; overflow-y: auto; background: #1a1a1a; padding: 10px; border: 1px solid #333; margin-bottom: 10px; }
+    .chat-msg { margin-bottom: 8px; }
+    input, textarea { width: 100%; padding: 8px; margin: 5px 0; border-radius: 5px; border: 1px solid #555; background: #222; color: #fff; }
   </style>
 </head>
-<body>  
-  <h1>🥜 Blackbeard Empire Services</h1>
-  <input type="text" id="search" placeholder="Search for a service...">  
-  <div id="services"></div>
-  <div id="paymentLink"></div>  
-  
-  <h2>📬 Custom Order Request</h2>
-  <form action="https://formspree.io/f/mnqelpdo" method="POST">
-    <input type="text" name="name" placeholder="Your name" required />
-    <input type="email" name="email" placeholder="Your email" required />
-    <textarea name="request" placeholder="What do you need?" rows="5" required></textarea>
-    <button type="submit">Submit Request</button>
-  </form>  
-  
-  <!-- 💬 Blackbeard Live Chat Box -->
-  <div id="chatBox" style="position:fixed;bottom:20px;right:20px;width:300px;background:#1f2833;border:1px solid #444;border-radius:10px;box-shadow:0 0 10px #000;z-index:1000;overflow:hidden;">
-    <div style="background:#45a29e;padding:10px;color:#fff;font-weight:bold;">💬 Chat with Blackbeard Bot</div>
-    <div id="chatMessages" style="padding:10px;height:200px;overflow-y:auto;font-size:14px;background:#0b0c10;color:#f8f8f2;"></div>
-    <div style="display:flex;border-top:1px solid #333;">
-      <input type="text" id="chatInput" placeholder="Type your message..." style="flex:1;padding:8px;border:none;background:#1c1c1c;color:white;">
-      <button onclick="sendMessage()" style="padding:8px 12px;background:#45a29e;border:none;color:white;font-weight:bold;">Send</button>
-    </div>
+<body>
+  <h1>☠️ Blackbeard Services ☠️</h1>
+
+  <div class="service-card">
+    <h2>📄 CV Creation</h2>
+    <p>Professional CV creation to help you land the job.</p>
+    <button class="btn" onclick="sendCommand('payment cv creation')">💳 Pay Now</button>
+    <div id="cv-payment-result"></div>
   </div>
-  
+
+  <div class="service-card">
+    <h2>🧠 Study Help</h2>
+    <p>Get help with homework, tests, and school projects.</p>
+    <button class="btn" onclick="sendCommand('payment study help')">💳 Pay Now</button>
+    <div id="study-payment-result"></div>
+  </div>
+
+  <div class="service-card">
+    <h2>🛒 Online Store Setup</h2>
+    <p>We help you build and launch your online shop fast.</p>
+    <button class="btn" onclick="sendCommand('payment online store')">💳 Pay Now</button>
+    <div id="store-payment-result"></div>
+  </div>
+
+  <h2>💬 Chat with Blackbeard</h2>
+  <div id="chat-output"></div>
+  <input type="text" id="chat-input" placeholder="Type your command here..." />
+  <button class="btn" onclick="handleChat()">⚓ Send</button>
+
   <script>
-    const services = ["CV Creation", "Study Buddy", "Proofreading", "Website Design", "App Development", "Automation Consulting"];
+    async function sendCommand(commandText) {
+      const resultId = {
+        'payment cv creation': 'cv-payment-result',
+        'payment study help': 'study-payment-result',
+        'payment online store': 'store-payment-result'
+      }[commandText] || 'chat-output';
 
-    const serviceContainer = document.getElementById("services");
-    const searchInput = document.getElementById("search");
-    const paymentLinkDiv = document.getElementById("paymentLink");
-
-    function renderServices(filter = "") {
-      paymentLinkDiv.innerHTML = "";
-      serviceContainer.innerHTML = "";
-      const filtered = services.filter(service => service.toLowerCase().includes(filter.toLowerCase()));
-      filtered.forEach(service => {
-        const el = document.createElement("div");
-        el.className = "service";
-        const button = document.createElement("button");
-        button.textContent = "💳 Pay Now";
-        button.onclick = () => requestPaymentLink(service);
-        el.innerHTML = `<strong>${service}</strong>`;
-        el.appendChild(button);
-        serviceContainer.appendChild(el);
+      const response = await fetch('/command', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: commandText })
       });
+
+      const data = await response.json();
+      document.getElementById(resultId).innerHTML = `<a href="${data.reply}" target="_blank" style="color: gold;">${data.reply}</a>`;
     }
 
-    async function requestPaymentLink(serviceName) {
-      paymentLinkDiv.textContent = "⏳ Generating payment link...";
-      try {
-        const response = await fetch("/command", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message: `payment ${serviceName.toLowerCase()}` })
-        });
-        const data = await response.json();
-        if (data.reply && data.reply.includes("http")) {
-          paymentLinkDiv.innerHTML = `<strong>Payment link for ${serviceName}:</strong><br/><a href="${extractUrl(data.reply)}" target="_blank">${extractUrl(data.reply)}</a>`;
-        } else {
-          paymentLinkDiv.textContent = "❌ Failed to get payment link. Please try again later.";
-        }
-      } catch (err) {
-        paymentLinkDiv.textContent = "❌ Error contacting payment system.";
-        console.error(err);
-      }
-    }
+    async function handleChat() {
+      const input = document.getElementById('chat-input');
+      const chatOutput = document.getElementById('chat-output');
+      const message = input.value;
+      input.value = '';
+      chatOutput.innerHTML += `<div class="chat-msg">🧑‍💻 You: ${message}</div>`;
 
-    function extractUrl(text) {
-      const urlRegex = /(https?:\/\/[^\s]+)/g;
-      const matches = text.match(urlRegex);
-      return matches ? matches[0] : "";
-    }
+      const response = await fetch('/command', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message })
+      });
 
-    searchInput.addEventListener("input", () => renderServices(searchInput.value));
-    renderServices();
-
-    // === Blackbeard Live Chat Box Script ===
-    async function sendMessage() {  
-      const input = document.getElementById("chatInput");  
-      const message = input.value.trim();  
-      if (!message) return;  
-  
-      const chat = document.getElementById("chatMessages");  
-      chat.innerHTML += `<div><strong>You:</strong> ${message}</div>`;  
-      input.value = "";  
-      chat.scrollTop = chat.scrollHeight;  
-  
-      try {  
-        const res = await fetch("/command", {  
-          method: "POST",  
-          headers: { "Content-Type": "application/json" },  
-          body: JSON.stringify({ message })  
-        });  
-        const data = await res.json();  
-        if (data.reply) {  
-          chat.innerHTML += `<div><strong>🦜 Blackbeard:</strong> ${data.reply}</div>`;  
-        } else {  
-          chat.innerHTML += `<div><strong>🦜 Blackbeard:</strong> ⚠️ No response received.</div>`;  
-        }  
-      } catch (err) {  
-        chat.innerHTML += `<div><strong>🦜 Blackbeard:</strong> ❌ Error talking to server.</div>`;  
-      }  
-  
-      chat.scrollTop = chat.scrollHeight;  
+      const data = await response.json();
+      chatOutput.innerHTML += `<div class="chat-msg">🤖 Blackbeard: ${data.reply}</div>`;
+      chatOutput.scrollTop = chatOutput.scrollHeight;
     }
   </script>
 </body>
