@@ -1,32 +1,35 @@
-// index.js – Scorpio-X Blackbeard Empire Core Server v2.2 (Fully Integrated, Standard Bank Only)
-
 const express = require("express");
-const fetch = require("node-fetch");
-const comms = require("./comms");         // 📡 Client Message Engine (assumed present)
-const vaultkeeper = require("./vaultkeeper"); // 💰 Vault Manager with deposits, withdrawals, reports
-const commands = require("./commands");   // 🧠 Captain Commands Handler
-require("./autoping");                    // Autoping script to keep awake (assumed present)
+const path = require("path");
+const comms = require("./comms");         // Your chat command engine
+const vaultkeeper = require("./vaultkeeper"); // Vault logic & API
+const commands = require("./commands");   // Commands logic & API
+require("./autoping");                     // Keep server alive
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const CAPTAIN_SECRET = process.env.CAPTAIN_SECRET || "ghost-999";
+const CAPTAIN_SECRET = process.env.CAPTAIN_SECRET || "blackbeard-secret-2025";
 
-// Middleware
+// Middleware to parse JSON
 app.use(express.json());
+
+// Serve the front-end chat UI from the 'public' folder
+app.use(express.static(path.join(__dirname, "public")));
+
+// Use your core middleware
 app.use(comms);
 app.use(vaultkeeper);
 app.use(commands);
 
-// Root Status Page
+// Root status page
 app.get("/", (req, res) => {
   res.send(`
     <h1>🦂 Scorpio-X Core | Blackbeard Online</h1>
     <p>Status: <strong>Active</strong><br/>Bots: Scanning for clients...<br/>Vaultkeeper: Watching the gold.</p>
-    <p><strong>Note:</strong> All payments go directly to Standard Bank account with unique references.</p>
+    <p><strong>Open <a href="/chat.html">/chat.html</a> to chat with Blackbeard live</strong></p>
   `);
 });
 
-// Captain Secret Control Panel
+// Captain control panel
 app.get("/captain", (req, res) => {
   const key = req.query.key;
   if (key !== CAPTAIN_SECRET) {
@@ -37,23 +40,22 @@ app.get("/captain", (req, res) => {
     <ul>
       <li>🛰️ Bot Status: ACTIVE</li>
       <li>💰 Vault Tracking: ENABLED</li>
-      <li>🛡️ Render Ping Protection: ON</li>
-      <li>💳 Payment Method: Standard Bank Direct (No Yoco links)</li>
+      <li>🛡️ Server Protection: ON</li>
     </ul>
   `);
 });
 
-// Privacy Policy Page
+// Privacy policy
 app.get("/privacy", (req, res) => {
   res.send(`
     <h2>🔐 Privacy Policy</h2>
-    <p>This system collects NO personal data. All transactions are securely processed via Standard Bank with unique payment references for accurate tracking.</p>
+    <p>This system collects NO personal data. All payments go directly to Standard Bank account with unique payment references.</p>
   `);
 });
 
-// Backup Self-Ping (Optional)
+// Backup self-ping to keep alive (every 5 min)
 setInterval(() => {
-  fetch("https://scorpio-x-core.onrender.com")
+  fetch("https://your-render-deployment-url.onrender.com") // Change to your actual URL
     .then(() => console.log("🌐 Pinged self to stay awake"))
     .catch((err) => console.error("⚠️ Ping failed:", err));
 }, 5 * 60 * 1000);
