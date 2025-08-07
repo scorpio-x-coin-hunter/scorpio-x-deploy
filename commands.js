@@ -1,112 +1,156 @@
-// commands.js – Blackbeard Captain Override & Command Center v2.0 Full Upgrade
+// commands.js – Scorpio-X Blackbeard Empire Commands Module v2.2
 
 const express = require("express");
 const router = express.Router();
+const services = require("./services");
+const fetch = require("node-fetch");
 
-const vaultkeeper = require("./vaultkeeperHelper"); // helper functions for vaultkeeper (you'll implement)
-const services = require("./services"); // your services array with keywords & payment links
+const VAULT_DEPOSIT_URL = process.env.VAULT_DEPOSIT_URL || "http://localhost:3000/vault/deposit";
+const VAULT_REPORT_URL = process.env.VAULT_REPORT_URL || "http://localhost:3000/vault/report";
+const WITHDRAWAL_PASSWORD = process.env.VAULT_PASS || "blackbeard-secret-2025";
 
-const CAPTAIN_SECRET = process.env.CAPTAIN_SECRET || "blackbeard-command"; 
-const VAULT_WITHDRAW_PASSWORD = process.env.VAULT_WITHDRAW_PASSWORD || "vaultpass-2025"; 
-
-// Helper: Find service by keyword
+// Helper to find service by keyword
 function findServiceByKeyword(keyword) {
   keyword = keyword.toLowerCase();
-  return services.find(s => s.keywords.some(k => k.toLowerCase() === keyword));
-}
-
-// Generate new payment link for a service (simulate or integrate your payment API here)
-function generatePaymentLink(serviceName) {
-  // In real case, integrate your payment system to generate unique link here
-  return `https://pay.yoco.com/r/${serviceName.toLowerCase().replace(/\s+/g, "")}-unique`;
+  return services.find((s) => s.keywords.some((k) => k.toLowerCase() === keyword));
 }
 
 router.post("/command", express.json(), async (req, res) => {
   const { message } = req.body;
-
   if (!message) {
     return res.status(400).json({ reply: "⚠️ No command received." });
   }
 
   const msg = message.toLowerCase().trim();
+  const parts = msg.split(" ");
 
-  // 🗝️ Captain Override
-  if (msg === CAPTAIN_SECRET) {
-    console.log("🗝️ Captain override accessed.");
-    return res.send({
-      reply: `🏴‍☠️ Captain Nicolaas, all bots operational.\nVaultkeeper active.\nEmpire logs stable.\nNo intrusions detected.`
-    });
+  // Captain override
+  if (msg === "blackbeard-command") {
+    return res.send({ reply: "🏴‍☠️ Captain override active. All systems operational." });
   }
 
-  // Vaultkeeper: Check Vault Balance
+  // Vault balance request
   if (msg === "vault balance") {
-    const balance = await vaultkeeper.getVaultBalance();
-    return res.send({ reply: `💰 Vault Balance: R${balance.toFixed(2)}` });
+    try {
+      const response = await fetch(VAULT_REPORT_URL);
+      const data = await response.json();
+      return res.send({ reply: `💰 Vault Balance: R${data.totalBalance.toFixed(2)}` });
+    } catch {
+      return res.send({ reply: "⚠️ Unable to fetch vault balance right now." });
+    }
   }
 
-  // Vaultkeeper: Withdraw command format:
-  // "withdraw <amount> <password> <yoco_payment_link>"
-  if (msg.startsWith("withdraw ")) {
-    const parts = msg.split(" ");
-    if (parts.length < 4) {
-      return res.send({ reply: "⚠️ Invalid withdraw command. Format: withdraw <amount> <password> <payment_link>" });
+  // Withdraw command: "withdraw <amount> <password>"
+  if (parts[0] === "withdraw") {
+    if (parts.length < 3) {
+      return res.send({ reply: "⚠️ Withdraw command format: withdraw <amount> <password>" });
     }
     const amount = parseFloat(parts[1]);
     const password = parts[2];
-    const payLink = parts.slice(3).join(" ");
 
-    if (password !== VAULT_WITHDRAW_PASSWORD) {
-      return res.send({ reply: "🚫 Incorrect vault withdrawal password." });
+    if (password !== WITHDRAWAL_PASSWORD) {
+      return res.send({ reply: "🚫 Incorrect withdrawal password." });
     }
 
-    const success = await vaultkeeper.withdrawAmount(amount, payLink);
-    if (success) {
-      return res.send({ reply: `✅ Withdraw R${amount.toFixed(2)} sent to ${payLink}` });
-    } else {
-      return res.send({ reply: `❌ Withdrawal failed. Check vault balance or details.` });
+    try {
+      const response = await fetch("http://localhost:3000/vault/withdraw", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password, amount }),
+      });
+      const data = await response.json();
+      return res.send({ reply: data.message || "Withdrawal processed." });
+    } catch {
+      return res.send({ reply: "⚠️ Withdrawal failed." });
     }
   }
 
-  // Create payment link for service request by keyword
-  // Example: "payment cv" or "payment logo"
-  if (msg.startsWith("payment ")) {
-    const keyword = msg.split(" ")[1];
-    const service = findServiceByKeyword(keyword);
+  // Payment command: "payment <service_keyword> <payerName> <amount>"
+  if (parts[0] === "payment") {
+    if (parts.length < 4) {
+      return res.send({ reply: "⚠️ Payment command format: payment <service> <payerName> <amount>" });
+    }
+    const serviceKeyword = parts[1];
+    const payerName = parts[2];
+    const amount = parseFloat(parts[3]);
 
+    if (isNaN(amount) || amount <= 0) {
+      return res.send({ reply: "⚠️ Please provide a valid amount greater than 0." });
+    }
+
+    const service = findServiceByKeyword(serviceKeyword);
     if (!service) {
-      return res.send({ reply: `❓ Service with keyword '${keyword}' not found.` });
+      return res.send({ reply: `❓ Service '${serviceKeyword}' not found.` });
     }
 
-    // Generate unique payment link for this transaction
-    const newLink = generatePaymentLink(service.name);
-    // Ideally: Store this payment link and track it in vaultkeeper
+    // Call vaultkeeper deposit endpoint to generate payment reference and instructions
+    try {
+      const response = await fetch(VAULT_DEPOSIT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ service: service.name, payer: payerName, amount }),
+      });
+      const data = await response.json();
+      if (data.paymentInfo) {
+        // Extract payment reference for example
+        const paymentRefMatch = data.paymentInfo.match(/Payment Reference: (.+)/);
+        const paymentRef = paymentRefMatch ? paymentRefMatch[1] : "<reference>";
 
-    return res.send({ reply: `💳 Payment link for ${service.name}:\n${newLink}` });
+        return res.send({
+          reply: `💰 Payment Instructions for ${service.name}:\n\n${data.paymentInfo}\n\n📝 After making the payment, please confirm by sending:\nconfirm payment ${paymentRef}\n\nExample:\nconfirm payment ${paymentRef}`,
+        });
+      } else {
+        return res.send({ reply: "⚠️ Could not generate payment instructions right now." });
+      }
+    } catch (err) {
+      return res.send({ reply: "⚠️ Error contacting vaultkeeper." });
+    }
   }
 
-  // Client attracting message for Reddit or social platforms
+  // Confirm payment command: "confirm payment <paymentReference>"
+  if (parts[0] === "confirm" && parts[1] === "payment") {
+    if (parts.length < 3) {
+      return res.send({ reply: "⚠️ Confirm payment format: confirm payment <paymentReference>" });
+    }
+    const paymentReference = parts[2].toUpperCase();
+
+    try {
+      const response = await fetch(VAULT_REPORT_URL);
+      const data = await response.json();
+
+      // Find payment with exact reference match
+      const foundPayment = data.log.find(
+        (entry) =>
+          entry.paymentReference &&
+          entry.paymentReference.toUpperCase() === paymentReference
+      );
+
+      if (foundPayment) {
+        return res.send({
+          reply: `✅ Payment confirmed!\nService: ${foundPayment.service}\nPayer: ${foundPayment.payer}\nAmount: R${foundPayment.amount.toFixed(
+            2
+          )}\nDate: ${new Date(foundPayment.timestamp).toLocaleString()}\n\nThank you for your payment, Captain Nicolaas will process your request shortly.`,
+        });
+      } else {
+        return res.send({ reply: `❌ No payment found with reference ${paymentReference}. Please check and try again.` });
+      }
+    } catch (err) {
+      return res.send({ reply: "⚠️ Unable to verify payment at the moment." });
+    }
+  }
+
+  // Attract clients command (help text)
   if (msg === "attract clients") {
-    const message = 
-`🏴‍☠️ Captain Nicolaas here! Need top-notch help with your projects? 
-Our Blackbeard bots deliver CVs, websites, apps, marketing & more! 
-Pay securely with unique links. DM us to get started! ⚓️`;
-    return res.send({ reply: message });
-  }
-
-  // Placeholder: twinkle and tweet copyrighted material (to be expanded)
-  if (msg === "twinkle tweet") {
-    return res.send({ reply: "✨ Twinkling and tweeting content to secure copyright compliance... (feature coming soon)" });
-  }
-
-  // 📡 System Status
-  if (msg.includes("status report")) {
     return res.send({
-      reply: "🛰️ System Status: Online\nPing: Stable\nBots: Listening for orders.\nVault: Accepting coins."
+      reply: `🏴‍☠️ Captain Nicolaas here! Need expert help? Our Blackbeard bots handle CVs, web dev, marketing & more.\nPay directly to Standard Bank with unique payment references generated per client!\n\n📝 To get started, send a command like:\npayment <service> <your full name> <amount>\n\nThen confirm your payment with:\nconfirm payment <paymentReference>\n\nFair winds and smooth sailing! ⚓️`,
     });
   }
 
-  // Default fallback
-  return res.send({ reply: "❌ Unknown command. Use your override key or ask for status report." });
+  // Unknown command fallback
+  return res.send({
+    reply:
+      "❌ Unknown command.\nUse one of:\n- payment <service> <payerName> <amount>\n- confirm payment <paymentReference>\n- vault balance\n- withdraw <amount> <password>",
+  });
 });
 
 module.exports = router;
