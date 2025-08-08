@@ -1,99 +1,65 @@
-const express = require("express");
-const router = express.Router();
-const { readVaultLog, writeVaultLog, logCoinEntry, calculateVaultBalance } = require("./vaultkeeperHelper");
+// vaultkeeper.js
+const fs = require("fs");
+const path = require("path");
 
-const WITHDRAWAL_PASSWORD = process.env.VAULT_PASS || "blackbeard-secret-2025";
+const vaultLogFile = path.join(__dirname, "vault_log.json");
 
-const BANK_DETAILS = {
-  name: "Standard Bank",
-  accountName: "Nicolaas Johannes Els",
-  accountNumber: "10135452331",
-  accountType: "Mymo Account",
-  branchCode: "051001"
-};
-
-// Generate unique payment reference
-function generatePaymentReference(service, payer) {
-  const datePart = new Date().toISOString().slice(0, 10).replace(/-/g, "");
-  const randomPart = Math.floor(10000 + Math.random() * 90000);
-  const payerInitials = payer
-    .split(" ")
-    .map((w) => w[0])
-    .join("")
-    .slice(0, 3)
-    .toUpperCase() || "XXX";
-  return `BB${datePart}${randomPart}${payerInitials}`;
+// ===== SAFE FILE READ =====
+function readVaultLog() {
+  try {
+    if (!fs.existsSync(vaultLogFile)) {
+      fs.writeFileSync(vaultLogFile, JSON.stringify([], null, 2));
+      return [];
+    }
+    const data = fs.readFileSync(vaultLogFile, "utf8");
+    return Array.isArray(JSON.parse(data)) ? JSON.parse(data) : [];
+  } catch (err) {
+    console.error("⚠️ Error reading vault log, resetting file:", err);
+    fs.writeFileSync(vaultLogFile, JSON.stringify([], null, 2));
+    return [];
+  }
 }
 
-// Deposit Endpoint
-router.post("/vault/deposit", (req, res) => {
-  const { service, payer, amount } = req.body;
-
-  if (!service || !payer || !amount || amount <= 0) {
-    return res.status(400).json({ message: "Missing or invalid data." });
+// ===== SAFE FILE WRITE =====
+function writeVaultLog(log) {
+  try {
+    if (!Array.isArray(log)) {
+      throw new Error("Vault log must be an array");
+    }
+    fs.writeFileSync(vaultLogFile, JSON.stringify(log, null, 2));
+  } catch (err) {
+    console.error("⚠️ Error writing vault log:", err);
   }
+}
 
-  const paymentReference = generatePaymentReference(service, payer);
-
-  const paymentInfo = `
-Please pay R${amount.toFixed(2)} to:
-Bank: ${BANK_DETAILS.name}
-Account Name: ${BANK_DETAILS.accountName}
-Account Number: ${BANK_DETAILS.accountNumber}
-Account Type: ${BANK_DETAILS.accountType}
-Branch Code: ${BANK_DETAILS.branchCode}
-Payment Reference: ${paymentReference}
-
-Use the Payment Reference exactly as it appears to ensure your payment is correctly recorded.
-`;
-
-  logCoinEntry({ service, payer, amount, paymentLink: paymentReference });
-
-  res.json({
-    message:
-      "✅ Coin deposit initiated. Please use the following bank details to complete payment.",
-    paymentInfo: paymentInfo.trim(),
-    paymentReference,
-  });
-});
-
-// Vault Report Endpoint
-router.get("/vault/report", (req, res) => {
+// ===== ADD TRANSACTION ENTRY =====
+function logCoinEntry(entry) {
+  if (!entry || typeof entry !== "object") {
+    console.error("⚠️ Invalid vault entry:", entry);
+    return;
+  }
   const log = readVaultLog();
-  const total = calculateVaultBalance();
-  res.json({ totalBalance: total, log });
-});
-
-// Withdrawal Endpoint
-router.post("/vault/withdraw", (req, res) => {
-  const { password, amount, paymentLink } = req.body;
-
-  if (password !== WITHDRAWAL_PASSWORD) {
-    return res.status(403).json({ message: "🚫 Unauthorized: Wrong password." });
-  }
-
-  if (!amount || amount <= 0) {
-    return res.status(400).json({ message: "Invalid withdrawal amount." });
-  }
-
-  const currentBalance = calculateVaultBalance();
-  if (amount > currentBalance) {
-    return res.status(400).json({ message: "Insufficient vault balance." });
-  }
-
-  logCoinEntry({
-    service: "Withdrawal",
-    payer: "Captain Nicolaas",
-    amount: -amount,
-    paymentLink: paymentLink || null,
+  log.push({
+    service: entry.service || "Unknown Service",
+    payer: entry.payer || "Unknown",
+    amount: Number(entry.amount) || 0,
+    paymentLink: entry.paymentLink || null,
+    confirmed: entry.confirmed || false,
+    timestamp: new Date().toISOString()
   });
+  writeVaultLog(log);
+  console.log("💰 VaultKeeper logged entry:", entry);
+}
 
-  res.json({ message: `💸 Withdrawal of R${amount.toFixed(2)} logged.` });
-});
+// ===== CALCULATE BALANCE =====
+function calculateVaultBalance() {
+  const log = readVaultLog();
+  return log.reduce((sum, entry) => sum + (Number(entry.amount) || 0), 0);
+}
 
-// Disable vault reset for security
-router.delete("/vault/reset", (req, res) => {
-  return res.status(403).json({ message: "🚫 Reset disabled for security." });
-});
-
-module.exports = router;
+module.exports = {
+  readVaultLog,
+  writeVaultLog,
+  logCoinEntry,
+  calculateVaultBalance
+};
