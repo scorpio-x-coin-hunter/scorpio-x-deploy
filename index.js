@@ -1,4 +1,4 @@
-// index.js
+// index.js - main entry point
 const express = require("express");
 const path = require("path");
 const commandsRouter = require("./commands"); // your commands.js router
