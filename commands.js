@@ -1,9 +1,10 @@
+// commands.js
 const fs = require("fs");
 const path = require("path");
 const express = require("express");
 const router = express.Router();
-const services = require("./services");
-const vaultkeeperHelper = require("./vaultkeeperHelper"); // reuse helpers
+const services = require("./services"); // your services list
+const vaultkeeperHelper = require("./vaultkeeperHelper"); // helper functions
 
 const {
   logCoinEntry,
@@ -11,7 +12,7 @@ const {
   readVaultLog,
 } = vaultkeeperHelper;
 
-// Simple helper to find service by keyword
+// Helper to find a service by keyword (case insensitive)
 function findServiceByKeyword(keyword) {
   return services.find((svc) =>
     svc.keywords.some((kw) => kw.toLowerCase() === keyword.toLowerCase())
@@ -20,7 +21,7 @@ function findServiceByKeyword(keyword) {
 
 // Generate payment instructions for a service request
 function generatePaymentInstructions(serviceName, payer, amount) {
-  // Generate unique payment reference (same logic as vaultkeeper)
+  // Create unique payment reference code (format: BBYYYYMMDD+random+payer initials)
   const datePart = new Date().toISOString().slice(0, 10).replace(/-/g, "");
   const randomPart = Math.floor(10000 + Math.random() * 90000);
   const payerInitials = payer
@@ -32,7 +33,7 @@ function generatePaymentInstructions(serviceName, payer, amount) {
 
   const paymentReference = `BB${datePart}${randomPart}${payerInitials}`;
 
-  // Your Standard Bank payment details
+  // Standard Bank payment details
   const BANK_NAME = "Standard Bank";
   const ACCOUNT_NAME = "Nicolaas Johannes Els";
   const ACCOUNT_NUMBER = "10135452331";
@@ -51,13 +52,13 @@ Payment Reference: ${paymentReference}
 Use the Payment Reference exactly as it appears to ensure your payment is correctly recorded.
 `;
 
-  // Log deposit request in vault
+  // Log this payment request in vault
   logCoinEntry({ service: serviceName, payer, amount, paymentLink: paymentReference });
 
   return { paymentReference, paymentInfo };
 }
 
-// Command router to handle incoming commands from /command POST
+// Handle incoming POST commands at /command
 router.post("/command", (req, res) => {
   const { message } = req.body;
   if (!message) {
@@ -67,13 +68,14 @@ router.post("/command", (req, res) => {
   const parts = message.trim().split(/\s+/);
   const cmd = parts[0].toLowerCase();
 
-  // Handle payment commands: payment [serviceKeyword] [payerName] [amount]
+  // Payment command: payment [serviceKeyword] [payerName] [amount]
   if (cmd === "payment") {
     if (parts.length < 4) {
       return res.json({
         reply: "Usage: payment [service keyword] [your full name] [amount]",
       });
     }
+
     const serviceKeyword = parts[1];
     const payerName = parts.slice(2, parts.length - 1).join(" ");
     const amountStr = parts[parts.length - 1];
@@ -112,25 +114,27 @@ router.post("/command", (req, res) => {
       return res.json({ reply: "Unknown confirm command. Use 'confirm payment [ref]'." });
     }
     const paymentRef = parts.slice(2).join("");
-    // Check vault log for this paymentRef
+    // Read vault log and find the payment
     const log = readVaultLog();
     const found = log.find((entry) => entry.paymentLink === paymentRef);
     if (!found) {
       return res.json({ reply: `❌ Payment reference ${paymentRef} not found.` });
     }
-    // Mark confirmed (can add confirmation timestamp)
+    // Mark payment as confirmed
     found.confirmed = true;
-    // Rewrite log with confirmation (for persistence)
+
+    // Save updated vault log back to file for persistence
     fs.writeFileSync(
       path.join(__dirname, "vault_log.json"),
       JSON.stringify(log, null, 2)
     );
+
     return res.json({
-      reply: `✅ Payment reference ${paymentRef} confirmed. Thank you!`
+      reply: `✅ Payment reference ${paymentRef} confirmed. Thank you!`,
     });
   }
 
-  // Default fallback reply
+  // Unknown command fallback
   return res.json({
     reply: "⚠️ Unknown command. Use 'payment' or 'confirm payment'.",
   });
