@@ -2,13 +2,21 @@ const express = require("express");
 const fs = require("fs");
 const path = require("path");
 const router = express.Router();
-const { readVaultLog } = require("./vaultkeeperHelper");
+const { readVaultLog, logCoinEntry, calculateVaultBalance } = require("./vaultkeeperHelper");
 
 // ===== CONFIGURABLE SERVICES =====
 const services = [
   { name: "Ship Repair", keywords: ["repair", "fixship", "shiprepair"] },
   { name: "Treasure Map Access", keywords: ["map", "treasuremap"] },
-  { name: "Rum Supply", keywords: ["rum", "drink", "beverage"] }
+  { name: "Rum Supply", keywords: ["rum", "drink", "beverage"] },
+  { name: "Reddit Marketing", keywords: ["reddit", "marketing", "promo"] },
+  { name: "Logo Design", keywords: ["logo", "design", "branding"] },
+  { name: "Website Development", keywords: ["website", "web", "dev"] },
+  { name: "CV Writing", keywords: ["cv", "resume", "job"] },
+  { name: "Copywriting", keywords: ["copy", "writing", "content"] },
+  { name: "Social Media Management", keywords: ["social", "media", "management"] },
+  { name: "SEO Optimization", keywords: ["seo", "optimization"] },
+  // Add more services here as needed
 ];
 
 // ===== SAFE FILE READ/WRITE =====
@@ -69,44 +77,7 @@ Payment Reference: ${paymentReference}
 Use the Payment Reference exactly as it appears to ensure your payment is correctly recorded.
 `;
 
-  // Log payment request to vault log
-  const vaultPath = path.join(__dirname, "vault_log.json");
-  const logData = safeReadJSON(vaultPath);
-
-  logData.push({
-    service: serviceName,
-    payer,
-    amount,
-    paymentLink: paymentReference,
-    confirmed: false,
-    date: new Date().toISOString()
-  });
-
-  safeWriteJSON(vaultPath, logData);
-
   return { paymentReference, paymentInfo };
-}
-
-// ===== CHAT BOT REPLY LOGIC =====
-function generateBotReply(message) {
-  const msg = message.toLowerCase();
-
-  if (msg.includes("hello") || msg.includes("hi")) {
-    return "Ahoy! Captain Nicolaas at your service. How can we assist you today?";
-  }
-  if (msg.includes("services")) {
-    return "We offer CV writing, logo design, website dev, marketing & more. Ask for a payment link!";
-  }
-  if (msg.includes("payment link")) {
-    return "Send 'payment <service keyword> <your full name> <amount>' to get your unique payment link.";
-  }
-  if (msg.includes("attract clients")) {
-    return `🏴‍☠️ Captain Nicolaas here! Need top-notch help with your projects? 
-Our Blackbeard bots deliver CVs, websites, apps, marketing & more! 
-Pay securely with unique links. DM us to get started! ⚓️`;
-  }
-  // Default fallback
-  return "Thanks for your message. We'll get back to you shortly.";
 }
 
 // ===== MAIN COMMAND HANDLER =====
@@ -147,22 +118,47 @@ router.post("/", (req, res) => {
       amount
     );
 
+    // Log the payment request
+    logCoinEntry({
+      service: service.name,
+      payer: payerName,
+      amount,
+      paymentLink: paymentReference,
+      confirmed: false,
+    });
+
     return res.json({
       reply: `🪙 Payment instructions for ${service.name}:`,
       paymentInfo
     });
   }
 
-  // === CONFIRM PAYMENT ===
-  // (Placeholder to avoid syntax errors; you can fill this in later)
-  // if (cmd === "confirmpayment") {
-  //   // Your confirm payment code here...
-  //   return res.json({ reply: "Confirm payment command received." });
-  // }
+  // === BALANCE COMMAND ===
+  if (cmd === "balance") {
+    const balance = calculateVaultBalance();
+    return res.json({ reply: `💰 Current vault balance is R${balance.toFixed(2)}.` });
+  }
 
-  // === GENERAL CHAT REPLY (fallback) ===
-  const reply = generateBotReply(message);
-  return res.json({ reply });
+  // === SERVICES COMMAND ===
+  if (cmd === "services") {
+    const list = services.map(s => `- ${s.name} (keywords: ${s.keywords.join(", ")})`).join("\n");
+    return res.json({ reply: `🛠️ Available services:\n${list}` });
+  }
+
+  // === HELP COMMAND ===
+  if (cmd === "help") {
+    return res.json({
+      reply: `Available commands:
+- payment [service keyword] [your full name] [amount]
+- balance
+- services
+- help
+`
+    });
+  }
+
+  // Fallback reply for unknown commands
+  return res.json({ reply: "⚠️ Unknown command. Try 'help' for a list of commands." });
 });
 
 module.exports = router;
