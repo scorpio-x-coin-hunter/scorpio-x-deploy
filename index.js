@@ -1,3 +1,7 @@
+// Scorpio-X Core Server - index.js
+// Author: Blackbeard AI Assistant
+// Description: Main server file for Scorpio-X Core, serving commands API and static files.
+
 const express = require("express");
 const path = require("path");
 const commandsRouter = require("./commands"); // Your commands.js router
