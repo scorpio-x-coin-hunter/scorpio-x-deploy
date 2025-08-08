@@ -7,7 +7,7 @@ const vaultLogFile = path.join(__dirname, "vault_log.json");
 function readVaultLog() {
   if (!fs.existsSync(vaultLogFile)) return [];
   try {
-    const data = fs.readFileSync(vaultLogFile);
+    const data = fs.readFileSync(vaultLogFile, "utf8");
     return JSON.parse(data);
   } catch (err) {
     console.error("⚠️ Error reading vault log:", err);
@@ -32,7 +32,7 @@ function logCoinEntry(entry) {
   console.log("💰 VaultKeeper logged entry:", entry);
 }
 
-// Calculate current vault balance
+// Calculate current vault balance by summing amounts
 function calculateVaultBalance() {
   const log = readVaultLog();
   return log.reduce((sum, entry) => sum + (entry.amount || 0), 0);
