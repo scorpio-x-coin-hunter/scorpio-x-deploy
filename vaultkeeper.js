@@ -1,4 +1,3 @@
-// vaultkeeper.js
 const fs = require("fs");
 const path = require("path");
 
@@ -12,7 +11,8 @@ function readVaultLog() {
       return [];
     }
     const data = fs.readFileSync(vaultLogFile, "utf8");
-    return Array.isArray(JSON.parse(data)) ? JSON.parse(data) : [];
+    const parsed = JSON.parse(data);
+    return Array.isArray(parsed) ? parsed : [];
   } catch (err) {
     console.error("⚠️ Error reading vault log, resetting file:", err);
     fs.writeFileSync(vaultLogFile, JSON.stringify([], null, 2));
@@ -45,7 +45,7 @@ function logCoinEntry(entry) {
     amount: Number(entry.amount) || 0,
     paymentLink: entry.paymentLink || null,
     confirmed: entry.confirmed || false,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
   writeVaultLog(log);
   console.log("💰 VaultKeeper logged entry:", entry);
@@ -61,5 +61,5 @@ module.exports = {
   readVaultLog,
   writeVaultLog,
   logCoinEntry,
-  calculateVaultBalance
+  calculateVaultBalance,
 };
