@@ -1,3 +1,12 @@
+/**
+ * vaultkeeperHelper.js
+ * 
+ * Helper functions to safely read, write, and manage the vault log of coin transactions.
+ * Provides utilities to log deposits and withdrawals, and calculate current vault balance.
+ * 
+ * All data is stored in 'vault_log.json' in JSON format.
+ */
+
 const fs = require("fs");
 const path = require("path");
 
