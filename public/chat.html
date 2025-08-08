@@ -5,21 +5,97 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Blackbeard Chat Bot</title>
 <style>
-  body { font-family: Arial, sans-serif; background: #0a0a0a; color: #eee; margin: 0; padding: 0; }
-  #chat-container { max-width: 600px; margin: 2rem auto; background: #111; border-radius: 8px; padding: 1rem; }
-  #messages { height: 400px; overflow-y: scroll; border: 1px solid #333; padding: 1rem; background: #222; }
-  .message { margin-bottom: 1rem; }
-  .user { color: #6cf; }
-  .bot { color: #9f6; }
-  #input-form { display: flex; margin-top: 1rem; }
-  #input-msg { flex: 1; padding: 0.5rem; font-size: 1rem; border-radius: 4px 0 0 4px; border: none; }
-  #send-btn { padding: 0.5rem 1rem; font-size: 1rem; border: none; background: #29a329; color: white; cursor: pointer; border-radius: 0 4px 4px 0; }
-  #send-btn:hover { background: #3fdb3f; }
+  body {
+    font-family: Arial, sans-serif;
+    background: #0a0a0a;
+    color: #eee;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+  }
+  #chat-container {
+    width: 100%;
+    max-width: 700px;
+    margin: 1rem;
+    background: #111;
+    border-radius: 8px;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 0 10px rgba(0,0,0,0.5);
+  }
+  h2 {
+    text-align: center;
+    margin-bottom: 0.5rem;
+  }
+  #messages {
+    flex: 1;
+    height: 60vh;
+    overflow-y: auto;
+    border: 1px solid #333;
+    padding: 1rem;
+    background: #222;
+    border-radius: 6px;
+  }
+  .message {
+    margin-bottom: 1rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+    max-width: 85%;
+    animation: fadeIn 0.2s ease-in;
+  }
+  .message.user {
+    background: #004466;
+    color: #fff;
+    align-self: flex-end;
+  }
+  .message.bot {
+    background: #224422;
+    color: #cfc;
+    align-self: flex-start;
+  }
+  .timestamp {
+    font-size: 0.75rem;
+    opacity: 0.6;
+    margin-top: 0.25rem;
+  }
+  #input-form {
+    display: flex;
+    margin-top: 1rem;
+  }
+  #input-msg {
+    flex: 1;
+    padding: 0.5rem;
+    font-size: 1rem;
+    border-radius: 4px 0 0 4px;
+    border: none;
+    outline: none;
+  }
+  #send-btn {
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    border: none;
+    background: #29a329;
+    color: white;
+    cursor: pointer;
+    border-radius: 0 4px 4px 0;
+    transition: background 0.2s;
+  }
+  #send-btn:hover {
+    background: #3fdb3f;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
 </style>
 </head>
 <body>
   <div id="chat-container">
-    <h2>Blackbeard Chat Bot</h2>
+    <h2>⚓ Blackbeard Chat Bot</h2>
     <div id="messages"></div>
     <form id="input-form">
       <input type="text" id="input-msg" placeholder="Type your command or message..." autocomplete="off" required />
@@ -32,11 +108,26 @@
   const form = document.getElementById('input-form');
   const input = document.getElementById('input-msg');
 
+  function getTimestamp() {
+    const now = new Date();
+    return now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
+
   function addMessage(text, sender) {
-    const div = document.createElement('div');
-    div.classList.add('message', sender);
-    div.textContent = text;
-    messagesEl.appendChild(div);
+    const wrapper = document.createElement('div');
+    wrapper.classList.add('message', sender);
+
+    const msgText = document.createElement('div');
+    msgText.textContent = text;
+
+    const time = document.createElement('div');
+    time.classList.add('timestamp');
+    time.textContent = getTimestamp();
+
+    wrapper.appendChild(msgText);
+    wrapper.appendChild(time);
+
+    messagesEl.appendChild(wrapper);
     messagesEl.scrollTop = messagesEl.scrollHeight;
   }
 
@@ -56,7 +147,7 @@
         addMessage('⚠️ No reply from server.', 'bot');
       }
     } catch (error) {
-      addMessage('⚠️ Error communicating with server.', 'bot');
+      addMessage('⚠️ Error communicating with server. Check your connection.', 'bot');
     }
   }
 
@@ -69,8 +160,11 @@
     input.focus();
   });
 
-  // Initial welcome message
-  addMessage('🦜 Ahoy! I am Blackbeard, your trusted vault keeper and assistant. Ask me about services or payments!', 'bot');
+  // Auto focus on load
+  window.addEventListener('load', () => {
+    input.focus();
+    addMessage('🦜 Ahoy! I am Blackbeard, your trusted vault keeper and assistant. Ask me about services or payments!', 'bot');
+  });
 </script>
 </body>
 </html>
