@@ -1,26 +1,25 @@
 const express = require("express");
 const router = express.Router();
-const { logCoinEntry, readVaultLog, calculateVaultBalance } = require("./vaultkeeper");
+const { logCoinEntry } = require("./vaultkeeper");
 
 // ===== CONFIGURABLE SERVICES =====
 const services = [
   { name: "Ship Repair", keywords: ["repair", "fixship", "shiprepair"] },
   { name: "Treasure Map Access", keywords: ["map", "treasuremap"] },
   { name: "Rum Supply", keywords: ["rum", "drink", "beverage"] },
-  { name: "CV Writing", keywords: ["cv", "resume", "cvwriting"] },
+  { name: "CV Writing", keywords: ["cv", "resume", "curriculum"] },
   { name: "Logo Design", keywords: ["logo", "branding", "design"] },
-  { name: "Website Dev", keywords: ["website", "webdev", "site"] },
-  { name: "Marketing", keywords: ["marketing", "ads", "promotion"] },
+  { name: "Website Development", keywords: ["website", "web", "dev"] },
+  { name: "Marketing", keywords: ["marketing", "ads", "advertising"] },
   { name: "Reddit Posting", keywords: ["reddit", "post", "redditpost"] },
-  { name: "Social Media Management", keywords: ["social", "media", "management"] },
-  { name: "Data Entry", keywords: ["data", "entry", "typing"] },
-  // Add more services here as needed
+  { name: "Data Entry", keywords: ["dataentry", "typing", "entry"] },
+  { name: "Virtual Assistant", keywords: ["assistant", "va", "virtualassistant"] },
 ];
 
 // ===== SERVICE LOOKUP =====
 function findServiceByKeyword(keyword) {
-  return services.find(svc =>
-    svc.keywords.some(kw => kw.toLowerCase() === keyword.toLowerCase())
+  return services.find((svc) =>
+    svc.keywords.some((kw) => kw.toLowerCase() === keyword.toLowerCase())
   );
 }
 
@@ -30,7 +29,7 @@ function generatePaymentInstructions(serviceName, payer, amount) {
   const randomPart = Math.floor(10000 + Math.random() * 90000);
   const payerInitials = payer
     .split(" ")
-    .map(w => w[0])
+    .map((w) => w[0])
     .join("")
     .slice(0, 3)
     .toUpperCase() || "XXX";
@@ -68,10 +67,11 @@ router.post("/", (req, res) => {
   const parts = message.trim().split(/\s+/);
   const cmd = parts[0].toLowerCase();
 
+  // === PAYMENT COMMAND ===
   if (cmd === "payment") {
     if (parts.length < 4) {
       return res.json({
-        reply: "Usage: payment [service keyword] [your full name] [amount]"
+        reply: "Usage: payment [service keyword] [your full name] [amount]",
       });
     }
 
@@ -95,6 +95,7 @@ router.post("/", (req, res) => {
       amount
     );
 
+    // Log payment request
     logCoinEntry({
       service: service.name,
       payer: payerName,
@@ -105,13 +106,12 @@ router.post("/", (req, res) => {
 
     return res.json({
       reply: `🪙 Payment instructions for ${service.name}:`,
-      paymentInfo
+      paymentInfo,
     });
   }
 
-  // Future commands can be added here
-
-  res.json({ reply: "⚠️ Unknown command. Please try again." });
+  // === UNKNOWN COMMAND ===
+  return res.json({ reply: "⚠️ Unknown command. Please try again." });
 });
 
 module.exports = router;
