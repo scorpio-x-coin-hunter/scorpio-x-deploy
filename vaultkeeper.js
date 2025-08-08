@@ -1,53 +1,23 @@
 const express = require("express");
-const fs = require("fs");
 const path = require("path");
 const router = express.Router();
+
+const {
+  readVaultLog,
+  logCoinEntry,
+  calculateVaultBalance
+} = require("./vaultkeeperHelper");
 
 const vaultLogFile = path.join(__dirname, "vault_log.json");
 
 const WITHDRAWAL_PASSWORD = process.env.VAULT_PASS || "blackbeard-secret-2025";
 
-// Bank details for payments
+// Bank details constants
 const BANK_NAME = "Standard Bank";
 const ACCOUNT_NAME = "Nicolaas Johannes Els";
 const ACCOUNT_NUMBER = "10135452331";
 const ACCOUNT_TYPE = "Mymo Account";
 const BANK_CODE = "051001";
-
-// Read vault log safely
-function readVaultLog() {
-  if (!fs.existsSync(vaultLogFile)) return [];
-  try {
-    const data = fs.readFileSync(vaultLogFile, "utf8");
-    return JSON.parse(data);
-  } catch (err) {
-    console.error("⚠️ Error reading vault log:", err);
-    return [];
-  }
-}
-
-// Write vault log safely
-function writeVaultLog(log) {
-  try {
-    fs.writeFileSync(vaultLogFile, JSON.stringify(log, null, 2));
-  } catch (err) {
-    console.error("⚠️ Error writing vault log:", err);
-  }
-}
-
-// Log coin transaction
-function logCoinEntry(entry) {
-  const log = readVaultLog();
-  log.push({ ...entry, timestamp: new Date().toISOString() });
-  writeVaultLog(log);
-  console.log("💰 VaultKeeper logged entry:", entry);
-}
-
-// Calculate vault balance
-function calculateVaultBalance() {
-  const log = readVaultLog();
-  return log.reduce((sum, entry) => sum + (entry.amount || 0), 0);
-}
 
 // Generate unique payment reference
 function generatePaymentReference(service, payer) {
@@ -62,7 +32,7 @@ function generatePaymentReference(service, payer) {
   return `BB${datePart}${randomPart}${payerInitials}`;
 }
 
-// Deposit endpoint
+// Deposit coins route
 router.post("/vault/deposit", express.json(), (req, res) => {
   const { service, payer, amount } = req.body;
 
@@ -94,14 +64,14 @@ Use the Payment Reference exactly as it appears to ensure your payment is correc
   });
 });
 
-// Vault report endpoint
+// Vault balance and log report
 router.get("/vault/report", (req, res) => {
   const log = readVaultLog();
   const total = calculateVaultBalance();
   res.json({ totalBalance: total, log });
 });
 
-// Withdrawal endpoint
+// Withdraw coins route (password protected)
 router.post("/vault/withdraw", express.json(), (req, res) => {
   const { password, amount, paymentLink } = req.body;
 
@@ -128,9 +98,39 @@ router.post("/vault/withdraw", express.json(), (req, res) => {
   res.json({ message: `💸 Withdrawal of R${amount.toFixed(2)} logged.` });
 });
 
-// Disable vault reset endpoint
+// Disable vault reset for security
 router.delete("/vault/reset", (req, res) => {
   return res.status(403).json({ message: "🚫 Reset disabled for security." });
+});
+
+// === LEGAL PAGES ===
+router.get("/legal/privacy", (req, res) => {
+  res.type("text/plain").send(`
+Blackbeard Empire Privacy Policy
+---------------------------------
+We respect your privacy and do not share your data without consent.
+All transactions are securely logged and handled.
+By using our service, you agree to our terms and conditions.
+  `);
+});
+
+router.get("/legal/cookies", (req, res) => {
+  res.type("text/plain").send(`
+Blackbeard Empire Cookies Policy
+-------------------------------
+Our website uses minimal cookies for session and security purposes only.
+No tracking or third-party cookies are employed.
+By continuing to use our site, you consent to this policy.
+  `);
+});
+
+router.get("/legal/refund", (req, res) => {
+  res.type("text/plain").send(`
+Blackbeard Empire Refund Policy
+------------------------------
+All sales are final unless a proven technical error occurs.
+Please contact support for any disputes or issues.
+  `);
 });
 
 module.exports = router;
