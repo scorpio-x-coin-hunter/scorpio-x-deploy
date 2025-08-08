@@ -1,24 +1,30 @@
-// commands.js
 const express = require("express");
 const router = express.Router();
-const { logCoinEntry, calculateVaultBalance } = require("./vaultkeeper");
+const { logCoinEntry, readVaultLog, calculateVaultBalance } = require("./vaultkeeper");
 
-// Configurable services and their keywords
+// ===== CONFIGURABLE SERVICES =====
 const services = [
   { name: "Ship Repair", keywords: ["repair", "fixship", "shiprepair"] },
   { name: "Treasure Map Access", keywords: ["map", "treasuremap"] },
   { name: "Rum Supply", keywords: ["rum", "drink", "beverage"] },
-  // Add more services here
+  { name: "CV Writing", keywords: ["cv", "resume", "cvwriting"] },
+  { name: "Logo Design", keywords: ["logo", "branding", "design"] },
+  { name: "Website Dev", keywords: ["website", "webdev", "site"] },
+  { name: "Marketing", keywords: ["marketing", "ads", "promotion"] },
+  { name: "Reddit Posting", keywords: ["reddit", "post", "redditpost"] },
+  { name: "Social Media Management", keywords: ["social", "media", "management"] },
+  { name: "Data Entry", keywords: ["data", "entry", "typing"] },
+  // Add more services here as needed
 ];
 
-// Helper: find service by keyword
+// ===== SERVICE LOOKUP =====
 function findServiceByKeyword(keyword) {
   return services.find(svc =>
     svc.keywords.some(kw => kw.toLowerCase() === keyword.toLowerCase())
   );
 }
 
-// Generate unique payment reference and instructions
+// ===== PAYMENT GENERATION =====
 function generatePaymentInstructions(serviceName, payer, amount) {
   const datePart = new Date().toISOString().slice(0, 10).replace(/-/g, "");
   const randomPart = Math.floor(10000 + Math.random() * 90000);
@@ -52,7 +58,7 @@ Use the Payment Reference exactly as it appears to ensure your payment is correc
   return { paymentReference, paymentInfo };
 }
 
-// POST /command
+// ===== MAIN COMMAND HANDLER =====
 router.post("/", (req, res) => {
   const { message } = req.body;
   if (!message) {
@@ -103,26 +109,9 @@ router.post("/", (req, res) => {
     });
   }
 
-  if (cmd === "balance") {
-    const balance = calculateVaultBalance();
-    return res.json({ reply: `💰 Current vault balance: R${balance.toFixed(2)}` });
-  }
+  // Future commands can be added here
 
-  if (cmd === "services") {
-    const list = services.map(s => s.name).join(", ");
-    return res.json({ reply: `🛠️ Available services: ${list}` });
-  }
-
-  // Basic chat replies for greetings and info
-  const lowerMsg = message.toLowerCase();
-  if (lowerMsg.includes("hello") || lowerMsg.includes("hi")) {
-    return res.json({ reply: "Ahoy! Captain Nicolaas at your service. How can I help you today?" });
-  }
-  if (lowerMsg.includes("help")) {
-    return res.json({ reply: "Send 'payment [service] [your name] [amount]' to get a payment link.\nTry 'services' to see available services." });
-  }
-
-  return res.json({ reply: "⚠️ Unknown command. Try 'help' or 'services'." });
+  res.json({ reply: "⚠️ Unknown command. Please try again." });
 });
 
 module.exports = router;
