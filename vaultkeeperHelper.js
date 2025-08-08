@@ -56,9 +56,59 @@ function calculateVaultBalance() {
   return log.reduce((sum, entry) => sum + (Number(entry.amount) || 0), 0);
 }
 
+// ===== SELF-PINGER DEVICE =====
+// Keeps the server alive by periodically calling its own health endpoint
+
+let selfPingInterval = null;
+function startSelfPinger(appUrl, intervalMs = 5 * 60 * 1000) { // default 5 mins
+  if (selfPingInterval) return; // already running
+
+  const fetch = require("node-fetch");
+
+  selfPingInterval = setInterval(async () => {
+    try {
+      const res = await fetch(appUrl);
+      if (res.ok) {
+        console.log("🛰️ Self-ping successful");
+      } else {
+        console.warn("⚠️ Self-ping responded with status:", res.status);
+      }
+    } catch (err) {
+      console.error("⚠️ Self-ping failed:", err);
+    }
+  }, intervalMs);
+
+  console.log("🛰️ Self-pinger started, pinging every", intervalMs / 1000, "seconds");
+}
+
+function stopSelfPinger() {
+  if (selfPingInterval) {
+    clearInterval(selfPingInterval);
+    selfPingInterval = null;
+    console.log("🛰️ Self-pinger stopped");
+  }
+}
+
+// ===== SATELLITE DEVICE (HEARTBEAT) =====
+// Simple heartbeat checker for system monitoring
+
+let lastHeartbeat = null;
+function recordHeartbeat() {
+  lastHeartbeat = new Date();
+  console.log("🚀 Heartbeat recorded at", lastHeartbeat.toISOString());
+}
+
+function getLastHeartbeat() {
+  return lastHeartbeat ? lastHeartbeat.toISOString() : "No heartbeat recorded yet";
+}
+
 module.exports = {
   readVaultLog,
   writeVaultLog,
   logCoinEntry,
-  calculateVaultBalance
+  calculateVaultBalance,
+  startSelfPinger,
+  stopSelfPinger,
+  recordHeartbeat,
+  getLastHeartbeat
 };
