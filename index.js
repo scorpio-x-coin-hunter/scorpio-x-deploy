@@ -1,33 +1,37 @@
-// index.js - main entry point
 const express = require("express");
 const path = require("path");
+const cors = require("cors");
+
 const commandsRouter = require("./commands"); // your commands.js router
 
 const app = express();
 const PORT = 10000;
 
-// Middleware to parse JSON request bodies
+// Enable CORS for all origins (for dev & testing)
+app.use(cors());
+
+// Middleware to parse JSON bodies
 app.use(express.json());
 
-// Serve static files from the "public" folder
-app.use(express.static(path.join(__dirname, "public")));
+// Serve static files from 'static' folder at '/static' URL path
+app.use('/static', express.static(path.join(__dirname, "static")));
 
-// Use commands router for /command endpoint
+// Use commands router at /command
 app.use("/command", commandsRouter);
 
 // Basic root route: info message
 app.get("/", (req, res) => {
   res.send(
-    "🦂 Scorpio-X Core Server is running. Visit /chat.html to chat with Blackbeard."
+    "🦂 Scorpio-X Core Server is running. Visit /static/chat.html to chat with Blackbeard."
   );
 });
 
-// Catch-all 404 handler for unknown routes
+// Catch-all 404 handler
 app.use((req, res) => {
   res.status(404).send("⚠️ 404 Not Found");
 });
 
-// Start the server
+// Start server
 app.listen(PORT, () => {
   console.log(`🛰️ Scorpio-X Core Server running on port ${PORT}`);
 });
