@@ -2,21 +2,20 @@ const express = require("express");
 const fs = require("fs");
 const path = require("path");
 const router = express.Router();
-const { readVaultLog, logCoinEntry, calculateVaultBalance } = require("./vaultkeeperHelper");
+const { logCoinEntry, readVaultLog } = require("./vaultkeeperHelper");
 
 // ===== CONFIGURABLE SERVICES =====
 const services = [
-  { name: "Ship Repair", keywords: ["repair", "fixship", "shiprepair"] },
-  { name: "Treasure Map Access", keywords: ["map", "treasuremap"] },
-  { name: "Rum Supply", keywords: ["rum", "drink", "beverage"] },
-  { name: "Reddit Marketing", keywords: ["reddit", "marketing", "promo"] },
-  { name: "Logo Design", keywords: ["logo", "design", "branding"] },
-  { name: "Website Development", keywords: ["website", "web", "dev"] },
-  { name: "CV Writing", keywords: ["cv", "resume", "job"] },
-  { name: "Copywriting", keywords: ["copy", "writing", "content"] },
-  { name: "Social Media Management", keywords: ["social", "media", "management"] },
-  { name: "SEO Optimization", keywords: ["seo", "optimization"] },
-  // Add more services here as needed
+  { name: "Ship Repair", keywords: ["repair", "fixship", "shiprepair"], description: "Fix your ship and keep it seaworthy." },
+  { name: "Treasure Map Access", keywords: ["map", "treasuremap", "treasure"], description: "Get exclusive access to treasure maps." },
+  { name: "Rum Supply", keywords: ["rum", "drink", "beverage"], description: "Order barrels of fine rum." },
+  { name: "CV Writing", keywords: ["cv", "resume", "curriculum"], description: "Professional CV writing and editing." },
+  { name: "Logo Design", keywords: ["logo", "branding"], description: "Get a unique logo for your brand." },
+  { name: "Website Development", keywords: ["website", "web", "site"], description: "Build a sleek website for your business." },
+  { name: "Marketing Services", keywords: ["marketing", "ads", "promotion"], description: "Boost your brand with marketing." },
+  { name: "Reddit Content Creation", keywords: ["reddit", "content", "posts"], description: "High-quality Reddit posts and comments." },
+  { name: "Social Media Management", keywords: ["social", "media", "management"], description: "Manage your social profiles professionally." },
+  { name: "Legal Consultation", keywords: ["legal", "consult", "lawyer"], description: "Basic legal advice and consultation." }
 ];
 
 // ===== SAFE FILE READ/WRITE =====
@@ -80,7 +79,7 @@ Use the Payment Reference exactly as it appears to ensure your payment is correc
   return { paymentReference, paymentInfo };
 }
 
-// ===== MAIN COMMAND HANDLER =====
+// ===== COMMAND HANDLER =====
 router.post("/", (req, res) => {
   const { message } = req.body;
   if (!message) {
@@ -89,6 +88,14 @@ router.post("/", (req, res) => {
 
   const parts = message.trim().split(/\s+/);
   const cmd = parts[0].toLowerCase();
+
+  // === HELP COMMAND ===
+  if (cmd === "help") {
+    const serviceList = services.map(svc => `- ${svc.name}: ${svc.description}`).join("\n");
+    return res.json({
+      reply: `🦜 Blackbeard Services Available:\n${serviceList}\n\nTo get payment instructions, type:\npayment [service keyword] [your full name] [amount]\nExample: payment rum John Doe 150`
+    });
+  }
 
   // === PAYMENT COMMAND ===
   if (cmd === "payment") {
@@ -109,7 +116,7 @@ router.post("/", (req, res) => {
 
     const service = findServiceByKeyword(serviceKeyword);
     if (!service) {
-      return res.json({ reply: `⚠️ Service keyword "${serviceKeyword}" not found.` });
+      return res.json({ reply: `⚠️ Service keyword "${serviceKeyword}" not found. Use "help" to see available services.` });
     }
 
     const { paymentReference, paymentInfo } = generatePaymentInstructions(
@@ -118,7 +125,7 @@ router.post("/", (req, res) => {
       amount
     );
 
-    // Log the payment request
+    // Log the payment request in vaultkeeper
     logCoinEntry({
       service: service.name,
       payer: payerName,
@@ -133,32 +140,23 @@ router.post("/", (req, res) => {
     });
   }
 
-  // === BALANCE COMMAND ===
+  // === SHOW BALANCE COMMAND ===
   if (cmd === "balance") {
-    const balance = calculateVaultBalance();
-    return res.json({ reply: `💰 Current vault balance is R${balance.toFixed(2)}.` });
+    const log = readVaultLog();
+    const total = log.reduce((sum, entry) => sum + (Number(entry.amount) || 0), 0);
+    return res.json({ reply: `💰 Total coins in vault: R${total.toFixed(2)}` });
   }
 
-  // === SERVICES COMMAND ===
+  // === LIST SERVICES COMMAND ===
   if (cmd === "services") {
-    const list = services.map(s => `- ${s.name} (keywords: ${s.keywords.join(", ")})`).join("\n");
-    return res.json({ reply: `🛠️ Available services:\n${list}` });
+    const list = services.map(svc => `${svc.name} (${svc.keywords[0]})`).join(", ");
+    return res.json({ reply: `Available services: ${list}` });
   }
 
-  // === HELP COMMAND ===
-  if (cmd === "help") {
-    return res.json({
-      reply: `Available commands:
-- payment [service keyword] [your full name] [amount]
-- balance
-- services
-- help
-`
-    });
-  }
-
-  // Fallback reply for unknown commands
-  return res.json({ reply: "⚠️ Unknown command. Try 'help' for a list of commands." });
+  // === UNKNOWN COMMAND FALLBACK ===
+  return res.json({
+    reply: "⚠️ Unknown command. Type 'help' to see available commands."
+  });
 });
 
 module.exports = router;
