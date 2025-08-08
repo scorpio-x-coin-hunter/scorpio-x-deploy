@@ -124,5 +124,6 @@ router.post("/command", (req, res) => {
       JSON.stringify(log, null, 2)
     );
  return res.json({
-  reply: `✅ Payment reference ${paymentRef} confirmed. Thank you!`
-});
+    reply: `✅ Payment reference ${paymentRef} confirmed. Thank you!`
+  });
+}); // <-- this closing brace closes the router.post handler
