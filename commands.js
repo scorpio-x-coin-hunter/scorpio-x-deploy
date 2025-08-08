@@ -1,19 +1,20 @@
 const express = require("express");
+const fs = require("fs");
+const path = require("path");
 const router = express.Router();
-const { logCoinEntry } = require("./vaultkeeper");
+const { logCoinEntry } = require("./vaultkeeperHelper");
 
 // ===== CONFIGURABLE SERVICES =====
 const services = [
   { name: "Ship Repair", keywords: ["repair", "fixship", "shiprepair"] },
   { name: "Treasure Map Access", keywords: ["map", "treasuremap"] },
   { name: "Rum Supply", keywords: ["rum", "drink", "beverage"] },
-  { name: "CV Writing", keywords: ["cv", "resume", "curriculum"] },
-  { name: "Logo Design", keywords: ["logo", "branding", "design"] },
-  { name: "Website Development", keywords: ["website", "web", "dev"] },
-  { name: "Marketing", keywords: ["marketing", "ads", "advertising"] },
-  { name: "Reddit Posting", keywords: ["reddit", "post", "redditpost"] },
-  { name: "Data Entry", keywords: ["dataentry", "typing", "entry"] },
-  { name: "Virtual Assistant", keywords: ["assistant", "va", "virtualassistant"] },
+  { name: "CV Writing", keywords: ["cv", "resume", "jobapp"] },
+  { name: "Logo Design", keywords: ["logo", "branding"] },
+  { name: "Website Development", keywords: ["website", "webdev", "site"] },
+  { name: "Marketing Campaign", keywords: ["marketing", "ads", "promotion"] },
+  { name: "Reddit Posting", keywords: ["reddit", "post", "promotion"] },
+  { name: "Social Media Management", keywords: ["socialmedia", "social", "media"] },
 ];
 
 // ===== SERVICE LOOKUP =====
@@ -27,12 +28,13 @@ function findServiceByKeyword(keyword) {
 function generatePaymentInstructions(serviceName, payer, amount) {
   const datePart = new Date().toISOString().slice(0, 10).replace(/-/g, "");
   const randomPart = Math.floor(10000 + Math.random() * 90000);
-  const payerInitials = payer
-    .split(" ")
-    .map((w) => w[0])
-    .join("")
-    .slice(0, 3)
-    .toUpperCase() || "XXX";
+  const payerInitials =
+    payer
+      .split(" ")
+      .map((w) => w[0])
+      .join("")
+      .slice(0, 3)
+      .toUpperCase() || "XXX";
 
   const paymentReference = `BB${datePart}${randomPart}${payerInitials}`;
 
@@ -81,12 +83,16 @@ router.post("/", (req, res) => {
     const amount = parseFloat(amountStr);
 
     if (isNaN(amount) || amount <= 0) {
-      return res.json({ reply: "⚠️ Invalid amount. Please enter a valid number." });
+      return res.json({
+        reply: "⚠️ Invalid amount. Please enter a valid number.",
+      });
     }
 
     const service = findServiceByKeyword(serviceKeyword);
     if (!service) {
-      return res.json({ reply: `⚠️ Service keyword "${serviceKeyword}" not found.` });
+      return res.json({
+        reply: `⚠️ Service keyword "${serviceKeyword}" not found.`,
+      });
     }
 
     const { paymentReference, paymentInfo } = generatePaymentInstructions(
@@ -110,8 +116,8 @@ router.post("/", (req, res) => {
     });
   }
 
-  // === UNKNOWN COMMAND ===
-  return res.json({ reply: "⚠️ Unknown command. Please try again." });
+  // Fallback reply
+  res.json({ reply: "⚠️ Unknown command. Please try again." });
 });
 
 module.exports = router;
