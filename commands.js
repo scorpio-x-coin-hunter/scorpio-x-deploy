@@ -69,6 +69,7 @@ Payment Reference: ${paymentReference}
 Use the Payment Reference exactly as it appears to ensure your payment is correctly recorded.
 `;
 
+  // Log payment request to vault log
   const vaultPath = path.join(__dirname, "vault_log.json");
   const logData = safeReadJSON(vaultPath);
 
