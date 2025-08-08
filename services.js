@@ -56,4 +56,5 @@ module.exports = [
   { name: "Email Quotation Setup", keywords: ["email quote", "quotation email"] },
   { name: "Brand Style Guide", keywords: ["brand guide", "style guide"] },
   { name: "Press Kit Prep", keywords: ["press kit", "media kit"] },
-  { name: "Product Photography
+  { name: "Product Photography", keywords: ["photo shoot", "product photo"] }
+];
