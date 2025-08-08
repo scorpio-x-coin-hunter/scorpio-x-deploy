@@ -1,60 +1,36 @@
-module.exports = [
-  { name: "CV Creation", keywords: ["cv", "resume", "curriculum vitae"] },
-  { name: "Study Buddy", keywords: ["study", "tutor", "school help", "study buddy"] },
-  { name: "Proofreading", keywords: ["proofread", "grammar", "editing"] },
-  { name: "Website Design", keywords: ["website", "web design", "site"] },
-  { name: "App Development", keywords: ["app", "application", "mobile"] },
-  { name: "Automation Consulting", keywords: ["automation", "consult", "automate"] },
-  { name: "Free Launcher CV", keywords: ["free cv", "starter cv"] },
-  { name: "Chatbot Development", keywords: ["chatbot", "bot", "ai bot"] },
-  { name: "Cover Letter", keywords: ["cover letter"] },
-  { name: "Business Plan", keywords: ["business plan", "startup plan"] },
-  { name: "Logo Design", keywords: ["logo"] },
-  { name: "Social Media Content", keywords: ["social media content"] },
-  { name: "Deck Design", keywords: ["deck", "pitch deck"] },
-  { name: "Online Course", keywords: ["course", "online class"] },
-  { name: "Technical Writing", keywords: ["technical writing"] },
-  { name: "Translation", keywords: ["translate", "translation"] },
-  { name: "SEO Optimization", keywords: ["seo", "optimize", "google ranking"] },
-  { name: "Content Writing", keywords: ["content writing", "writing", "blog"] },
-  { name: "Email Marketing", keywords: ["email marketing"] },
-  { name: "Video Editing", keywords: ["video edit", "edit video"] },
-  { name: "Voice Over", keywords: ["voice over", "voiceover"] },
-  { name: "Digital Marketing", keywords: ["digital marketing", "online marketing"] },
-  { name: "Data Analysis", keywords: ["data", "analysis"] },
-  { name: "Project Management", keywords: ["project manager", "project management"] },
-  { name: "Graphic Design", keywords: ["graphic design", "graphics"] },
-  { name: "Social Media Management", keywords: ["social media management"] },
-  { name: "Copywriting", keywords: ["copywriting", "sales writing"] },
-  { name: "Website Maintenance", keywords: ["site maintenance", "website upkeep"] },
-  { name: "IT Support", keywords: ["it support", "technical support"] },
-  { name: "Resume Optimization", keywords: ["resume boost", "cv upgrade"] },
-  { name: "Online Tutoring", keywords: ["tutor", "online tutoring"] },
-  { name: "AI Chatbot Setup", keywords: ["ai setup", "chatbot install"] },
-  { name: "Business Naming", keywords: ["naming", "brand naming"] },
-  { name: "Sales Funnel", keywords: ["sales funnel", "funnel"] },
-  { name: "E-Commerce Setup", keywords: ["ecommerce", "shop", "online store"] },
-  { name: "Content Strategy", keywords: ["content plan", "strategy"] },
-  { name: "Email Newsletter Setup", keywords: ["newsletter", "email blast"] },
-  { name: "Video Production", keywords: ["video production"] },
-  { name: "Podcast Production", keywords: ["podcast", "audio show"] },
-  { name: "Online Workshop", keywords: ["workshop", "class", "seminar"] },
-  { name: "SEO Audit", keywords: ["seo audit", "site audit"] },
-  { name: "Graphic Design Consultation", keywords: ["design consult", "graphic review"] },
-  { name: "Website SEO", keywords: ["website seo"] },
-  { name: "Content Marketing", keywords: ["content marketing"] },
-  { name: "Lead Generation", keywords: ["leads", "generate leads"] },
-  { name: "Online Reputation", keywords: ["online rep", "reputation management"] },
-  { name: "Copy Editing", keywords: ["copy editing", "text fixing"] },
-  { name: "Newsletter Writing", keywords: ["newsletter writing"] },
-  { name: "Press Release Writing", keywords: ["press release"] },
-  { name: "Loading Page Design", keywords: ["loading page", "preloader"] },
-  { name: "Market Research", keywords: ["market research", "research"] },
-  { name: "Pitch Deck Creation", keywords: ["pitch deck", "startup pitch"] },
-  { name: "Ad Copywriting", keywords: ["ad copy", "ads"] },
-  { name: "LinkedIn Optimization", keywords: ["linkedin profile", "linkedin help"] },
-  { name: "Email Quotation Setup", keywords: ["email quote", "quotation email"] },
-  { name: "Brand Style Guide", keywords: ["brand guide", "style guide"] },
-  { name: "Press Kit Prep", keywords: ["press kit", "media kit"] },
-  { name: "Product Photography", keywords: ["photo shoot", "product photo"] }
-];
+const express = require("express");
+const cors = require("cors");               // <-- Add this line
+const path = require("path");
+const commandsRouter = require("./commands");
+
+const app = express();
+const PORT = process.env.PORT || 10000;    // <-- Use environment variable or fallback
+
+// Middleware to parse JSON request bodies
+app.use(express.json());
+
+// Enable CORS for all routes (allows cross-origin requests)
+app.use(cors());                           // <-- Add this line
+
+// Serve static files from the "public" folder
+app.use(express.static(path.join(__dirname, "public")));
+
+// Use commands router for /command endpoint
+app.use("/command", commandsRouter);
+
+// Basic root route: info message
+app.get("/", (req, res) => {
+  res.send(
+    "🦂 Scorpio-X Core Server is running. Visit /chat.html to chat with Blackbeard."
+  );
+});
+
+// Catch-all 404 handler for unknown routes
+app.use((req, res) => {
+  res.status(404).send("⚠️ 404 Not Found");
+});
+
+// Start the server
+app.listen(PORT, () => {
+  console.log(`🛰️ Scorpio-X Core Server running on port ${PORT}`);
+});
