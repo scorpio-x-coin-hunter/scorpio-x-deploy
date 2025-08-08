@@ -1,33 +1,42 @@
+// vaultkeeper.js
 const express = require("express");
-const path = require("path");
 const router = express.Router();
-
-const { readVaultLog, logCoinEntry, calculateVaultBalance } = require("./vaultkeeperHelper");
+const path = require("path");
+const fs = require("fs");
+const {
+  readVaultLog,
+  writeVaultLog,
+  logCoinEntry,
+  calculateVaultBalance,
+} = require("./vaultkeeperHelper");
 
 const WITHDRAWAL_PASSWORD = process.env.VAULT_PASS || "blackbeard-secret-2025";
 
-const BANK_NAME = "Standard Bank";
-const ACCOUNT_NAME = "Nicolaas Johannes Els";
-const ACCOUNT_NUMBER = "10135452331";
-const ACCOUNT_TYPE = "Mymo Account";
-const BANK_CODE = "051001";
+const BANK_DETAILS = {
+  BANK_NAME: "Standard Bank",
+  ACCOUNT_NAME: "Nicolaas Johannes Els",
+  ACCOUNT_NUMBER: "10135452331",
+  ACCOUNT_TYPE: "Mymo Account",
+  BANK_CODE: "051001",
+};
 
+// Generate unique payment reference
 function generatePaymentReference(service, payer) {
   const datePart = new Date().toISOString().slice(0, 10).replace(/-/g, "");
   const randomPart = Math.floor(10000 + Math.random() * 90000);
-  const payerInitials = payer
-    .split(" ")
-    .map(w => w[0])
-    .join("")
-    .slice(0, 3)
-    .toUpperCase() || "XXX";
+  const payerInitials =
+    payer
+      .split(" ")
+      .map((w) => w[0])
+      .join("")
+      .slice(0, 3)
+      .toUpperCase() || "XXX";
   return `BB${datePart}${randomPart}${payerInitials}`;
 }
 
-// Deposit coins (creates payment reference and logs)
-router.post("/vault/deposit", express.json(), (req, res) => {
+// Deposit endpoint - creates payment info and logs deposit intent
+router.post("/vault/deposit", (req, res) => {
   const { service, payer, amount } = req.body;
-
   if (!service || !payer || !amount || amount <= 0) {
     return res.status(400).json({ message: "Missing or invalid data." });
   }
@@ -36,11 +45,11 @@ router.post("/vault/deposit", express.json(), (req, res) => {
 
   const paymentInfo = `
 Please pay R${amount.toFixed(2)} to:
-Bank: ${BANK_NAME}
-Account Name: ${ACCOUNT_NAME}
-Account Number: ${ACCOUNT_NUMBER}
-Account Type: ${ACCOUNT_TYPE}
-Branch Code: ${BANK_CODE}
+Bank: ${BANK_DETAILS.BANK_NAME}
+Account Name: ${BANK_DETAILS.ACCOUNT_NAME}
+Account Number: ${BANK_DETAILS.ACCOUNT_NUMBER}
+Account Type: ${BANK_DETAILS.ACCOUNT_TYPE}
+Branch Code: ${BANK_DETAILS.BANK_CODE}
 Payment Reference: ${paymentReference}
 
 Use the Payment Reference exactly as it appears to ensure your payment is correctly recorded.
@@ -48,22 +57,23 @@ Use the Payment Reference exactly as it appears to ensure your payment is correc
 
   logCoinEntry({ service, payer, amount, paymentLink: paymentReference });
 
-  res.json({
-    message: "✅ Coin deposit initiated. Please use the following bank details to complete payment.",
+  return res.json({
+    message:
+      "✅ Coin deposit initiated. Please use the following bank details to complete payment.",
     paymentInfo: paymentInfo.trim(),
     paymentReference,
   });
 });
 
-// Vault report: current balance + full log
+// Vault report - current balance + full log
 router.get("/vault/report", (req, res) => {
   const log = readVaultLog();
   const total = calculateVaultBalance();
   res.json({ totalBalance: total, log });
 });
 
-// Withdrawal with password protection
-router.post("/vault/withdraw", express.json(), (req, res) => {
+// Withdrawal endpoint - requires password, amount, optional paymentLink
+router.post("/vault/withdraw", (req, res) => {
   const { password, amount, paymentLink } = req.body;
 
   if (password !== WITHDRAWAL_PASSWORD) {
@@ -84,12 +94,13 @@ router.post("/vault/withdraw", express.json(), (req, res) => {
     payer: "Captain Nicolaas",
     amount: -amount,
     paymentLink: paymentLink || null,
+    confirmed: true,
   });
 
-  res.json({ message: `💸 Withdrawal of R${amount.toFixed(2)} logged.` });
+  return res.json({ message: `💸 Withdrawal of R${amount.toFixed(2)} logged.` });
 });
 
-// Disable vault reset for security
+// Disable reset for security
 router.delete("/vault/reset", (req, res) => {
   return res.status(403).json({ message: "🚫 Reset disabled for security." });
 });
