@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Blackbeard Empire Portal</title>
-    <link rel="stylesheet" href="/static/styles.css">
+    <link rel="stylesheet" href="/static/styles.css" />
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -42,6 +42,7 @@
             font-size: 14px;
             color: #ccc;
         }
+        /* Chat styles */
         #chat-container {
             background: #1a1a3d;
             border-radius: 10px;
@@ -49,24 +50,42 @@
             max-width: 600px;
             margin: 20px auto;
             text-align: left;
+            display: flex;
+            flex-direction: column;
+            height: 500px;
+        }
+        #chat-messages {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding-right: 10px;
         }
         .message {
             margin: 10px 0;
             padding: 8px;
             border-radius: 6px;
+            max-width: 80%;
+            word-wrap: break-word;
         }
         .user {
             background-color: #333;
+            align-self: flex-end;
             text-align: right;
         }
         .bot {
             background-color: #222;
+            align-self: flex-start;
+        }
+        #input-area {
+            margin-top: 10px;
+            display: flex;
+            gap: 10px;
         }
         #chat-input {
-            width: 75%;
+            flex-grow: 1;
             padding: 10px;
             border-radius: 5px;
             border: none;
+            font-size: 1rem;
         }
         #send-btn {
             padding: 10px 15px;
@@ -74,6 +93,7 @@
             border: none;
             border-radius: 5px;
             cursor: pointer;
+            font-weight: bold;
         }
         #send-btn:hover {
             background-color: #ffaa33;
@@ -83,6 +103,8 @@
             padding: 10px;
             border-radius: 6px;
             margin-top: 10px;
+            white-space: pre-line;
+            font-family: monospace;
         }
     </style>
 </head>
@@ -98,8 +120,8 @@
         <!-- Chatbot Section -->
         <div id="chat-container">
             <div id="chat-messages"></div>
-            <div style="margin-top: 10px;">
-                <input type="text" id="chat-input" placeholder="Type your message...">
+            <div id="input-area">
+                <input type="text" id="chat-input" placeholder="Type your message..." autocomplete="off" />
                 <button id="send-btn">Send</button>
             </div>
         </div>
@@ -110,12 +132,12 @@
     </footer>
 
     <script>
-        const chatMessages = document.getElementById('chat-messages');
-        const chatInput = document.getElementById('chat-input');
-        const sendBtn = document.getElementById('send-btn');
+        const chatMessages = document.getElementById("chat-messages");
+        const chatInput = document.getElementById("chat-input");
+        const sendBtn = document.getElementById("send-btn");
 
         function appendMessage(text, sender) {
-            const msg = document.createElement('div');
+            const msg = document.createElement("div");
             msg.className = `message ${sender}`;
             msg.innerHTML = text;
             chatMessages.appendChild(msg);
@@ -126,33 +148,39 @@
             const message = chatInput.value.trim();
             if (!message) return;
 
-            appendMessage(message, 'user');
-            chatInput.value = '';
+            appendMessage(message, "user");
+            chatInput.value = "";
 
             try {
-                const res = await fetch('/command', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message })
+                const res = await fetch("/command", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ message }),
                 });
                 const data = await res.json();
-                appendMessage(data.reply || "☠️ No response from the bot.", 'bot');
+                appendMessage(data.reply || "☠️ No response from the bot.", "bot");
 
                 if (data.paymentInfo) {
                     appendMessage(
-                        `<div class="payment-box"><strong>Payment Details:</strong><br>${data.paymentInfo.replace(/\n/g, '<br>')}</div>`,
-                        'bot'
+                        `<div class="payment-box"><strong>Payment Details:</strong><br>${data.paymentInfo.replace(/\n/g, "<br>")}</div>`,
+                        "bot"
                     );
                 }
             } catch (err) {
-                appendMessage("⚠️ Error contacting server.", 'bot');
+                appendMessage("⚠️ Error contacting server.", "bot");
             }
         }
 
-        sendBtn.addEventListener('click', sendMessage);
-        chatInput.addEventListener('keypress', e => {
-            if (e.key === 'Enter') sendMessage();
+        sendBtn.addEventListener("click", sendMessage);
+        chatInput.addEventListener("keypress", (e) => {
+            if (e.key === "Enter") sendMessage();
         });
+
+        // Initial welcome message
+        appendMessage(
+            "🦜 Ahoy! I am Blackbeard, your trusted vault keeper and assistant. Ask me about services or payments!",
+            "bot"
+        );
     </script>
 </body>
 </html>
