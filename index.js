@@ -1,36 +1,33 @@
-// Scorpio-X Core Server - index.js
-// Author: Blackbeard AI Assistant
-// Description: Main server file for Scorpio-X Core, serving commands API and static files.
-
+// index.js
 const express = require("express");
 const path = require("path");
-const commandsRouter = require("./commands"); // Your commands.js router
+const commandsRouter = require("./commands"); // your commands.js router
 
 const app = express();
 const PORT = 10000;
 
-// Middleware to parse JSON body
+// Middleware to parse JSON request bodies
 app.use(express.json());
 
 // Serve static files from the "public" folder
 app.use(express.static(path.join(__dirname, "public")));
 
-// Use commands router for /command API endpoint
+// Use commands router for /command endpoint
 app.use("/command", commandsRouter);
 
-// Basic root route (optional)
+// Basic root route: info message
 app.get("/", (req, res) => {
   res.send(
     "🦂 Scorpio-X Core Server is running. Visit /chat.html to chat with Blackbeard."
   );
 });
 
-// Catch-all for unknown routes
+// Catch-all 404 handler for unknown routes
 app.use((req, res) => {
   res.status(404).send("⚠️ 404 Not Found");
 });
 
-// Start server
+// Start the server
 app.listen(PORT, () => {
   console.log(`🛰️ Scorpio-X Core Server running on port ${PORT}`);
 });
