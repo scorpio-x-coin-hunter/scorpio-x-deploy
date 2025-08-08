@@ -1,15 +1,13 @@
-// comms.js – Scorpio-X Blackbeard Empire Client Message Engine v2.0 (Complete Upgrade)
-
 const express = require("express");
 const router = express.Router();
 
-const vaultkeeper = require("./vaultkeeperHelper"); // Vault functions
-const commands = require("./commands"); // Command handler (if needed)
+const vaultkeeper = require("./vaultkeeperHelper"); // Vault functions (if needed)
+const commands = require("./commands"); // Your commands router (optional)
 
-// In-memory message store (replace with DB for production)
+// In-memory message store (use DB for production)
 const messages = [];
 
-// Simple bot auto-reply logic for demonstration
+// Simple bot auto-reply logic for demo
 function generateBotReply(message) {
   const msg = message.toLowerCase();
 
@@ -31,15 +29,14 @@ Pay securely with unique links. DM us to get started! ⚓️`;
   return "Thanks for your message. We'll get back to you shortly.";
 }
 
-// Endpoint to receive client messages (bots or users)
-router.post("/comms/message", express.json(), async (req, res) => {
+// Endpoint to receive client messages
+router.post("/comms/message", express.json(), (req, res) => {
   const { sender, message } = req.body;
 
   if (!sender || !message) {
     return res.status(400).json({ message: "Missing sender or message." });
   }
 
-  // Save message
   messages.push({
     sender,
     message,
@@ -48,14 +45,12 @@ router.post("/comms/message", express.json(), async (req, res) => {
 
   console.log(`📡 Message received from ${sender}: ${message}`);
 
-  // Generate bot reply
   const reply = generateBotReply(message);
 
-  // For now, just respond with reply text (you could also save replies or send push notifications)
   res.json({ reply });
 });
 
-// Endpoint to get all messages (for monitoring/debugging)
+// Endpoint to get all messages (for debugging)
 router.get("/comms/messages", (req, res) => {
   res.json({ messages });
 });
