@@ -3,7 +3,7 @@ const fs = require("fs");
 const path = require("path");
 const router = express.Router();
 
-// Vaultkeeper helper functions (read/write logs)
+// Vaultkeeper helper functions
 const {
   readVaultLog,
   writeVaultLog,
@@ -18,7 +18,7 @@ const services = [
   { name: "Rum Supply", keywords: ["rum", "drink", "beverage"] },
 ];
 
-// Helper: safe read JSON file
+// Safe read JSON helper
 function safeReadJSON(filePath) {
   try {
     if (!fs.existsSync(filePath)) return [];
@@ -30,7 +30,7 @@ function safeReadJSON(filePath) {
   }
 }
 
-// Helper: safe write JSON file
+// Safe write JSON helper
 function safeWriteJSON(filePath, data) {
   try {
     fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
@@ -39,14 +39,14 @@ function safeWriteJSON(filePath, data) {
   }
 }
 
-// Find service by keyword (case-insensitive)
+// Find service by keyword
 function findServiceByKeyword(keyword) {
   return services.find((svc) =>
     svc.keywords.some((kw) => kw.toLowerCase() === keyword.toLowerCase())
   );
 }
 
-// Generate payment reference & instructions
+// Generate payment instructions
 function generatePaymentInstructions(serviceName, payer, amount) {
   const datePart = new Date().toISOString().slice(0, 10).replace(/-/g, "");
   const randomPart = Math.floor(10000 + Math.random() * 90000);
@@ -60,7 +60,6 @@ function generatePaymentInstructions(serviceName, payer, amount) {
 
   const paymentReference = `BB${datePart}${randomPart}${payerInitials}`;
 
-  // Bank details - update here if needed
   const BANK_NAME = "Standard Bank";
   const ACCOUNT_NAME = "Nicolaas Johannes Els";
   const ACCOUNT_NUMBER = "10135452331";
@@ -79,7 +78,7 @@ Payment Reference: ${paymentReference}
 Use the Payment Reference exactly as it appears to ensure your payment is correctly recorded.
 `;
 
-  // Log the payment request (unconfirmed)
+  // Log payment request
   const vaultPath = path.join(__dirname, "vault_log.json");
   const logData = safeReadJSON(vaultPath);
 
@@ -97,7 +96,7 @@ Use the Payment Reference exactly as it appears to ensure your payment is correc
   return { paymentReference, paymentInfo };
 }
 
-// === MAIN COMMAND HANDLER ===
+// Main command handler route
 router.post("/", express.json(), (req, res) => {
   const { message } = req.body;
   if (!message) {
@@ -107,7 +106,7 @@ router.post("/", express.json(), (req, res) => {
   const parts = message.trim().split(/\s+/);
   const cmd = parts[0].toLowerCase();
 
-  // === PAYMENT COMMAND ===
+  // Payment command
   if (cmd === "payment") {
     if (parts.length < 4) {
       return res.json({
@@ -143,7 +142,7 @@ router.post("/", express.json(), (req, res) => {
     });
   }
 
-  // === CONFIRM PAYMENT ===
+  // Confirm payment command
   if (cmd === "confirm" && parts[1]?.toLowerCase() === "payment") {
     if (parts.length < 3) {
       return res.json({
@@ -168,66 +167,10 @@ router.post("/", express.json(), (req, res) => {
     });
   }
 
-  // === DEFAULT BOT RESPONSE ===
+  // Default response
   return res.json({
     reply: `☠️ Arrr, I heard ye say: "${message}". But I only understand 'payment' and 'confirm payment' commands... for now.`,
   });
 });
 
-// --- BEGIN: Communications router included from your recent snippet ---
-
-// In-memory message store (demo only)
-const messages = [];
-
-// Simple bot auto-reply logic for messages
-function generateBotReply(message) {
-  const msg = message.toLowerCase();
-
-  if (msg.includes("hello") || msg.includes("hi")) {
-    return "Ahoy! Captain Nicolaas at your service. How can we assist you today?";
-  }
-  if (msg.includes("services")) {
-    return "We offer CV writing, logo design, website dev, marketing & more. Ask for a payment link!";
-  }
-  if (msg.includes("payment link")) {
-    return "Send 'payment <service>' to get your unique payment link.";
-  }
-  if (msg.includes("attract clients")) {
-    return `🏴‍☠️ Captain Nicolaas here! Need top-notch help with your projects? 
-Our Blackbeard bots deliver CVs, websites, apps, marketing & more! 
-Pay securely with unique links. DM us to get started! ⚓️`;
-  }
-  // Default fallback
-  return "Thanks for your message. We'll get back to you shortly.";
-}
-
-// Endpoint to receive client messages (users or bots)
-router.post("/comms/message", express.json(), (req, res) => {
-  const { sender, message } = req.body;
-
-  if (!sender || !message) {
-    return res.status(400).json({ message: "Missing sender or message." });
-  }
-
-  // Save message in-memory
-  messages.push({
-    sender,
-    message,
-    timestamp: new Date().toISOString(),
-  });
-
-  console.log(`📡 Message received from ${sender}: ${message}`);
-
-  // Generate bot reply
-  const reply = generateBotReply(message);
-
-  res.json({ reply });
-});
-
-// Endpoint to get all messages (for monitoring/debugging)
-router.get("/comms/messages", (req, res) => {
-  res.json({ messages });
-});
-
-// Export the router
 module.exports = router;
