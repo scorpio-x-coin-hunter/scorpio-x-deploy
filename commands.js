@@ -1,18 +1,22 @@
+// commands.js
 const express = require("express");
 const fs = require("fs");
 const path = require("path");
 const router = express.Router();
+const {
+  readVaultLog,
+  writeVaultLog,
+  logCoinEntry,
+} = require("./vaultkeeperHelper");
 
-const { readVaultLog, writeVaultLog } = require("./vaultkeeperHelper");
-
-// Configured services
+// === Configurable Services ===
 const services = [
   { name: "Ship Repair", keywords: ["repair", "fixship", "shiprepair"] },
   { name: "Treasure Map Access", keywords: ["map", "treasuremap"] },
-  { name: "Rum Supply", keywords: ["rum", "drink", "beverage"] }
+  { name: "Rum Supply", keywords: ["rum", "drink", "beverage"] },
 ];
 
-// Safe JSON read/write for vault log (in case we need)
+// === Utility Functions for safe JSON read/write ===
 function safeReadJSON(filePath) {
   try {
     if (!fs.existsSync(filePath)) return [];
@@ -32,23 +36,24 @@ function safeWriteJSON(filePath, data) {
   }
 }
 
-// Find service by keyword
+// === Find service by keyword ===
 function findServiceByKeyword(keyword) {
-  return services.find(svc =>
-    svc.keywords.some(kw => kw.toLowerCase() === keyword.toLowerCase())
+  return services.find((svc) =>
+    svc.keywords.some((kw) => kw.toLowerCase() === keyword.toLowerCase())
   );
 }
 
-// Generate payment instructions + logs to vault
+// === Generate payment instructions and log ===
 function generatePaymentInstructions(serviceName, payer, amount) {
   const datePart = new Date().toISOString().slice(0, 10).replace(/-/g, "");
   const randomPart = Math.floor(10000 + Math.random() * 90000);
-  const payerInitials = payer
-    .split(" ")
-    .map(w => w[0])
-    .join("")
-    .slice(0, 3)
-    .toUpperCase() || "XXX";
+  const payerInitials =
+    payer
+      .split(" ")
+      .map((w) => w[0])
+      .join("")
+      .slice(0, 3)
+      .toUpperCase() || "XXX";
 
   const paymentReference = `BB${datePart}${randomPart}${payerInitials}`;
 
@@ -70,6 +75,7 @@ Payment Reference: ${paymentReference}
 Use the Payment Reference exactly as it appears to ensure your payment is correctly recorded.
 `;
 
+  // Log payment request to vault log
   const vaultPath = path.join(__dirname, "vault_log.json");
   const logData = safeReadJSON(vaultPath);
 
@@ -79,7 +85,7 @@ Use the Payment Reference exactly as it appears to ensure your payment is correc
     amount,
     paymentLink: paymentReference,
     confirmed: false,
-    date: new Date().toISOString()
+    date: new Date().toISOString(),
   });
 
   safeWriteJSON(vaultPath, logData);
@@ -87,17 +93,7 @@ Use the Payment Reference exactly as it appears to ensure your payment is correc
   return { paymentReference, paymentInfo };
 }
 
-// Legal text snippet to show on "legal" command
-const legalText = `
-📜 Blackbeard Empire Legal Notice:
-- All payments and services are subject to availability.
-- Refunds only issued upon valid proof and confirmation within 7 days.
-- Services provided "as-is" without warranty.
-- Your privacy is respected; no data shared without consent.
-- By using our services, you agree to our terms and conditions.
-`;
-
-// Main command processor
+// === Command handler POST /command ===
 router.post("/", (req, res) => {
   const { message } = req.body;
   if (!message) {
@@ -107,11 +103,11 @@ router.post("/", (req, res) => {
   const parts = message.trim().split(/\s+/);
   const cmd = parts[0].toLowerCase();
 
-  // PAYMENT command
+  // === PAYMENT COMMAND ===
   if (cmd === "payment") {
     if (parts.length < 4) {
       return res.json({
-        reply: "Usage: payment [service keyword] [your full name] [amount]"
+        reply: "Usage: payment [service keyword] [your full name] [amount]",
       });
     }
 
@@ -137,15 +133,15 @@ router.post("/", (req, res) => {
 
     return res.json({
       reply: `🪙 Payment instructions for ${service.name}:`,
-      paymentInfo
+      paymentInfo,
     });
   }
 
-  // CONFIRM PAYMENT command
+  // === CONFIRM PAYMENT ===
   if (cmd === "confirm" && parts[1]?.toLowerCase() === "payment") {
     if (parts.length < 3) {
       return res.json({
-        reply: "Usage: confirm payment [payment reference code]"
+        reply: "Usage: confirm payment [payment reference code]",
       });
     }
 
@@ -153,7 +149,7 @@ router.post("/", (req, res) => {
     const vaultPath = path.join(__dirname, "vault_log.json");
     const logData = safeReadJSON(vaultPath);
 
-    const found = logData.find(entry => entry.paymentLink === paymentRef);
+    const found = logData.find((entry) => entry.paymentLink === paymentRef);
     if (!found) {
       return res.json({ reply: `❌ Payment reference ${paymentRef} not found.` });
     }
@@ -162,4 +158,3 @@ router.post("/", (req, res) => {
     safeWriteJSON(vaultPath, logData);
 
     return res.json({
-      reply: `✅ Payment reference ${paymentRef
