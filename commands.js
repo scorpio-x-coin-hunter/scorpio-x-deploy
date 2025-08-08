@@ -123,5 +123,6 @@ router.post("/command", (req, res) => {
       path.join(__dirname, "vault_log.json"),
       JSON.stringify(log, null, 2)
     );
-    return res.json({
-      reply: `✅ Payment reference ${paymentRef} confirmed. Thank you!
+ return res.json({
+  reply: `✅ Payment reference ${paymentRef} confirmed. Thank you!`
+});
