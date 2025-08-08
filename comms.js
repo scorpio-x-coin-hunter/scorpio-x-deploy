@@ -1,12 +1,13 @@
 const express = require("express");
 const router = express.Router();
 
-const vaultkeeper = require("./vaultkeeperHelper"); // Vault functions
+const vaultkeeper = require("./vaultkeeperHelper"); // Vault functions (optional)
+const commands = require("./commands"); // Command router if needed (optional)
 
-// In-memory message store (replace with DB for production)
+// In-memory message store (for demo; replace with DB in production)
 const messages = [];
 
-// Simple bot auto-reply logic for demonstration
+// Simple bot auto-reply logic
 function generateBotReply(message) {
   const msg = message.toLowerCase();
 
@@ -28,8 +29,8 @@ Pay securely with unique links. DM us to get started! ⚓️`;
   return "Thanks for your message. We'll get back to you shortly.";
 }
 
-// Endpoint to receive client messages (bots or users)
-router.post("/comms/message", express.json(), async (req, res) => {
+// Endpoint to receive client messages (users or bots)
+router.post("/comms/message", express.json(), (req, res) => {
   const { sender, message } = req.body;
 
   if (!sender || !message) {
