@@ -1,3 +1,5 @@
+const fs = require("fs");
+const path = require("path");
 const express = require("express");
 const router = express.Router();
 const services = require("./services");
@@ -123,7 +125,15 @@ router.post("/command", (req, res) => {
       path.join(__dirname, "vault_log.json"),
       JSON.stringify(log, null, 2)
     );
- return res.json({
-    reply: `✅ Payment reference ${paymentRef} confirmed. Thank you!`
+    return res.json({
+      reply: `✅ Payment reference ${paymentRef} confirmed. Thank you!`
+    });
+  }
+
+  // Default fallback reply
+  return res.json({
+    reply: "⚠️ Unknown command. Use 'payment' or 'confirm payment'.",
   });
-}); // <-- this closing brace closes the router.post handler
+});
+
+module.exports = router;
