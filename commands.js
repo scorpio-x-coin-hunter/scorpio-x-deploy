@@ -132,3 +132,9 @@ router.post("/", (req, res) => {
   }
 
   // === CONFIRM PAYMENT
+
+// Your confirm payment code block here...
+
+});
+
+module.exports = router;
