@@ -1,3 +1,5 @@
+require('dotenv').config();  // Load .env secrets at the very start
+
 const express = require("express");
 const path = require("path");
 const cors = require("cors");
@@ -8,32 +10,30 @@ const vaultkeeperRouter = require("./vaultkeeper");
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-// Middleware to parse JSON request bodies
+// Middleware to parse JSON
 app.use(express.json());
 
-// Enable CORS globally
+// Enable CORS for all routes
 app.use(cors());
 
-// Serve static files from the "public" folder
+// Serve static files from "public" folder
 app.use(express.static(path.join(__dirname, "public")));
 
 // Routes
 app.use("/command", commandsRouter);
-app.use("/", vaultkeeperRouter); // Handles /vault and legal routes
+app.use(vaultkeeperRouter);  // Vault endpoints at /vault/...
 
-// Basic root route: info message
+// Root route info
 app.get("/", (req, res) => {
-  res.send(
-    "🦂 Scorpio-X Core Server is running. Visit /chat.html to chat with Blackbeard."
-  );
+  res.send("🦂 Scorpio-X Core Server is running. Visit /chat.html to chat with Blackbeard.");
 });
 
-// Catch-all 404 handler
+// 404 handler
 app.use((req, res) => {
   res.status(404).send("⚠️ 404 Not Found");
 });
 
-// Start the server
+// Start server
 app.listen(PORT, () => {
   console.log(`🛰️ Scorpio-X Core Server running on port ${PORT}`);
 });
