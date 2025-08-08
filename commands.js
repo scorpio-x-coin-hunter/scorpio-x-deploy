@@ -2,16 +2,17 @@ const express = require("express");
 const fs = require("fs");
 const path = require("path");
 const router = express.Router();
+
 const { readVaultLog, writeVaultLog } = require("./vaultkeeperHelper");
 
-// Configurable services with keywords
+// Configured services
 const services = [
   { name: "Ship Repair", keywords: ["repair", "fixship", "shiprepair"] },
   { name: "Treasure Map Access", keywords: ["map", "treasuremap"] },
   { name: "Rum Supply", keywords: ["rum", "drink", "beverage"] }
 ];
 
-// Safe JSON read/write helpers
+// Safe JSON read/write for vault log (in case we need)
 function safeReadJSON(filePath) {
   try {
     if (!fs.existsSync(filePath)) return [];
@@ -38,7 +39,7 @@ function findServiceByKeyword(keyword) {
   );
 }
 
-// Generate payment instructions
+// Generate payment instructions + logs to vault
 function generatePaymentInstructions(serviceName, payer, amount) {
   const datePart = new Date().toISOString().slice(0, 10).replace(/-/g, "");
   const randomPart = Math.floor(10000 + Math.random() * 90000);
@@ -69,7 +70,6 @@ Payment Reference: ${paymentReference}
 Use the Payment Reference exactly as it appears to ensure your payment is correctly recorded.
 `;
 
-  // Log payment request
   const vaultPath = path.join(__dirname, "vault_log.json");
   const logData = safeReadJSON(vaultPath);
 
@@ -87,7 +87,17 @@ Use the Payment Reference exactly as it appears to ensure your payment is correc
   return { paymentReference, paymentInfo };
 }
 
-// Command handler POST /
+// Legal text snippet to show on "legal" command
+const legalText = `
+📜 Blackbeard Empire Legal Notice:
+- All payments and services are subject to availability.
+- Refunds only issued upon valid proof and confirmation within 7 days.
+- Services provided "as-is" without warranty.
+- Your privacy is respected; no data shared without consent.
+- By using our services, you agree to our terms and conditions.
+`;
+
+// Main command processor
 router.post("/", (req, res) => {
   const { message } = req.body;
   if (!message) {
@@ -97,7 +107,7 @@ router.post("/", (req, res) => {
   const parts = message.trim().split(/\s+/);
   const cmd = parts[0].toLowerCase();
 
-  // PAYMENT COMMAND
+  // PAYMENT command
   if (cmd === "payment") {
     if (parts.length < 4) {
       return res.json({
@@ -110,4 +120,46 @@ router.post("/", (req, res) => {
     const amountStr = parts[parts.length - 1];
     const amount = parseFloat(amountStr);
 
-    if (isNaN(amount) || amount <= 0)
+    if (isNaN(amount) || amount <= 0) {
+      return res.json({ reply: "⚠️ Invalid amount. Please enter a valid number." });
+    }
+
+    const service = findServiceByKeyword(serviceKeyword);
+    if (!service) {
+      return res.json({ reply: `⚠️ Service keyword "${serviceKeyword}" not found.` });
+    }
+
+    const { paymentReference, paymentInfo } = generatePaymentInstructions(
+      service.name,
+      payerName,
+      amount
+    );
+
+    return res.json({
+      reply: `🪙 Payment instructions for ${service.name}:`,
+      paymentInfo
+    });
+  }
+
+  // CONFIRM PAYMENT command
+  if (cmd === "confirm" && parts[1]?.toLowerCase() === "payment") {
+    if (parts.length < 3) {
+      return res.json({
+        reply: "Usage: confirm payment [payment reference code]"
+      });
+    }
+
+    const paymentRef = parts.slice(2).join("");
+    const vaultPath = path.join(__dirname, "vault_log.json");
+    const logData = safeReadJSON(vaultPath);
+
+    const found = logData.find(entry => entry.paymentLink === paymentRef);
+    if (!found) {
+      return res.json({ reply: `❌ Payment reference ${paymentRef} not found.` });
+    }
+
+    found.confirmed = true;
+    safeWriteJSON(vaultPath, logData);
+
+    return res.json({
+      reply: `✅ Payment reference ${paymentRef
