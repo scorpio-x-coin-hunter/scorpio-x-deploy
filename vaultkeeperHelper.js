@@ -1,5 +1,3 @@
-// vaultkeeperHelper.js – Blackbeard Empire VaultKeeper Utility Functions v1.0
-
 const fs = require("fs");
 const path = require("path");
 
