@@ -1,16 +1,3 @@
-/**
- * vaultkeeper.js
- * 
- * Handles all vault operations for the Blackbeard Empire:
- * - Coin deposit with unique payment references
- * - Vault balance reporting
- * - Secure withdrawals with password protection
- * - Prevents reset for security reasons
- * 
- * Author: Captain Nicolaas Johannes Els
- * Date: 2025
- */
-
 const express = require("express");
 const fs = require("fs");
 const path = require("path");
@@ -20,7 +7,7 @@ const vaultLogFile = path.join(__dirname, "vault_log.json");
 
 const WITHDRAWAL_PASSWORD = process.env.VAULT_PASS || "blackbeard-secret-2025";
 
-// Standard Bank payment details
+// Bank details for payments
 const BANK_NAME = "Standard Bank";
 const ACCOUNT_NAME = "Nicolaas Johannes Els";
 const ACCOUNT_NUMBER = "10135452331";
@@ -31,7 +18,7 @@ const BANK_CODE = "051001";
 function readVaultLog() {
   if (!fs.existsSync(vaultLogFile)) return [];
   try {
-    const data = fs.readFileSync(vaultLogFile);
+    const data = fs.readFileSync(vaultLogFile, "utf8");
     return JSON.parse(data);
   } catch (err) {
     console.error("⚠️ Error reading vault log:", err);
@@ -62,7 +49,7 @@ function calculateVaultBalance() {
   return log.reduce((sum, entry) => sum + (entry.amount || 0), 0);
 }
 
-// Generate unique payment reference for each deposit
+// Generate unique payment reference
 function generatePaymentReference(service, payer) {
   const datePart = new Date().toISOString().slice(0, 10).replace(/-/g, "");
   const randomPart = Math.floor(10000 + Math.random() * 90000);
@@ -141,7 +128,7 @@ router.post("/vault/withdraw", express.json(), (req, res) => {
   res.json({ message: `💸 Withdrawal of R${amount.toFixed(2)} logged.` });
 });
 
-// Disable vault reset
+// Disable vault reset endpoint
 router.delete("/vault/reset", (req, res) => {
   return res.status(403).json({ message: "🚫 Reset disabled for security." });
 });
