@@ -13,7 +13,7 @@ app.use(express.json());
 // Enable CORS for all routes
 app.use(cors());
 
-// Serve static files from the "public" folder
+// Serve static files from the "public" folder (your chat.html goes here)
 app.use(express.static(path.join(__dirname, "public")));
 
 // Routes
@@ -26,8 +26,6 @@ app.get("/", (req, res) => {
     "🦂 Scorpio-X Core Server is running. Visit /chat.html to chat with Blackbeard."
   );
 });
-
-// === CHATBOT API & WEB CHAT ===
 
 // In-memory message store (for demo; replace with DB in production)
 const messages = [];
