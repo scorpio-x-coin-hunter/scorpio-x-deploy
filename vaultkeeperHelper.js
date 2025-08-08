@@ -1,16 +1,9 @@
-/**
- * vaultkeeperHelper.js
- * 
- * Safe, persistent vault log handling with schema validation.
- * Stores coin transactions in 'vault_log.json' in JSON format.
- */
-
 const fs = require("fs");
 const path = require("path");
 
 const vaultLogFile = path.join(__dirname, "vault_log.json");
 
-// ===== SAFE FILE READ =====
+// Safe read vault log file with schema validation
 function readVaultLog() {
   try {
     if (!fs.existsSync(vaultLogFile)) {
@@ -26,7 +19,7 @@ function readVaultLog() {
   }
 }
 
-// ===== SAFE FILE WRITE =====
+// Safe write vault log file
 function writeVaultLog(log) {
   try {
     if (!Array.isArray(log)) {
@@ -38,7 +31,7 @@ function writeVaultLog(log) {
   }
 }
 
-// ===== ADD TRANSACTION ENTRY =====
+// Log a new coin transaction entry
 function logCoinEntry(entry) {
   if (!entry || typeof entry !== "object") {
     console.error("⚠️ Invalid vault entry:", entry);
@@ -57,7 +50,7 @@ function logCoinEntry(entry) {
   console.log("💰 VaultKeeper logged entry:", entry);
 }
 
-// ===== CALCULATE BALANCE =====
+// Calculate current vault balance
 function calculateVaultBalance() {
   const log = readVaultLog();
   return log.reduce((sum, entry) => sum + (Number(entry.amount) || 0), 0);
