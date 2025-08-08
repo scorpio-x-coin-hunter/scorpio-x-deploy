@@ -1,3 +1,16 @@
+/**
+ * vaultkeeper.js
+ * 
+ * Handles all vault operations for the Blackbeard Empire:
+ * - Coin deposit with unique payment references
+ * - Vault balance reporting
+ * - Secure withdrawals with password protection
+ * - Prevents reset for security reasons
+ * 
+ * Author: Captain Nicolaas Johannes Els
+ * Date: 2025
+ */
+
 const express = require("express");
 const fs = require("fs");
 const path = require("path");
