@@ -1,22 +1,17 @@
-// commands.js
 const express = require("express");
 const fs = require("fs");
 const path = require("path");
 const router = express.Router();
-const {
-  readVaultLog,
-  writeVaultLog,
-  logCoinEntry,
-} = require("./vaultkeeperHelper");
+const { readVaultLog } = require("./vaultkeeperHelper");
 
-// === Configurable Services ===
+// ===== CONFIGURABLE SERVICES =====
 const services = [
   { name: "Ship Repair", keywords: ["repair", "fixship", "shiprepair"] },
   { name: "Treasure Map Access", keywords: ["map", "treasuremap"] },
-  { name: "Rum Supply", keywords: ["rum", "drink", "beverage"] },
+  { name: "Rum Supply", keywords: ["rum", "drink", "beverage"] }
 ];
 
-// === Utility Functions for safe JSON read/write ===
+// ===== SAFE FILE READ/WRITE =====
 function safeReadJSON(filePath) {
   try {
     if (!fs.existsSync(filePath)) return [];
@@ -36,24 +31,23 @@ function safeWriteJSON(filePath, data) {
   }
 }
 
-// === Find service by keyword ===
+// ===== SERVICE LOOKUP =====
 function findServiceByKeyword(keyword) {
-  return services.find((svc) =>
-    svc.keywords.some((kw) => kw.toLowerCase() === keyword.toLowerCase())
+  return services.find(svc =>
+    svc.keywords.some(kw => kw.toLowerCase() === keyword.toLowerCase())
   );
 }
 
-// === Generate payment instructions and log ===
+// ===== PAYMENT GENERATION =====
 function generatePaymentInstructions(serviceName, payer, amount) {
   const datePart = new Date().toISOString().slice(0, 10).replace(/-/g, "");
   const randomPart = Math.floor(10000 + Math.random() * 90000);
-  const payerInitials =
-    payer
-      .split(" ")
-      .map((w) => w[0])
-      .join("")
-      .slice(0, 3)
-      .toUpperCase() || "XXX";
+  const payerInitials = payer
+    .split(" ")
+    .map(w => w[0])
+    .join("")
+    .slice(0, 3)
+    .toUpperCase() || "XXX";
 
   const paymentReference = `BB${datePart}${randomPart}${payerInitials}`;
 
@@ -85,7 +79,7 @@ Use the Payment Reference exactly as it appears to ensure your payment is correc
     amount,
     paymentLink: paymentReference,
     confirmed: false,
-    date: new Date().toISOString(),
+    date: new Date().toISOString()
   });
 
   safeWriteJSON(vaultPath, logData);
@@ -93,7 +87,7 @@ Use the Payment Reference exactly as it appears to ensure your payment is correc
   return { paymentReference, paymentInfo };
 }
 
-// === Command handler POST /command ===
+// ===== MAIN COMMAND HANDLER =====
 router.post("/", (req, res) => {
   const { message } = req.body;
   if (!message) {
@@ -107,7 +101,7 @@ router.post("/", (req, res) => {
   if (cmd === "payment") {
     if (parts.length < 4) {
       return res.json({
-        reply: "Usage: payment [service keyword] [your full name] [amount]",
+        reply: "Usage: payment [service keyword] [your full name] [amount]"
       });
     }
 
@@ -133,28 +127,8 @@ router.post("/", (req, res) => {
 
     return res.json({
       reply: `🪙 Payment instructions for ${service.name}:`,
-      paymentInfo,
+      paymentInfo
     });
   }
 
-  // === CONFIRM PAYMENT ===
-  if (cmd === "confirm" && parts[1]?.toLowerCase() === "payment") {
-    if (parts.length < 3) {
-      return res.json({
-        reply: "Usage: confirm payment [payment reference code]",
-      });
-    }
-
-    const paymentRef = parts.slice(2).join("");
-    const vaultPath = path.join(__dirname, "vault_log.json");
-    const logData = safeReadJSON(vaultPath);
-
-    const found = logData.find((entry) => entry.paymentLink === paymentRef);
-    if (!found) {
-      return res.json({ reply: `❌ Payment reference ${paymentRef} not found.` });
-    }
-
-    found.confirmed = true;
-    safeWriteJSON(vaultPath, logData);
-
-    return res.json({
+  // === CONFIRM PAYMENT
