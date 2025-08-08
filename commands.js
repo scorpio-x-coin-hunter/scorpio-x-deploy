@@ -1,51 +1,24 @@
+// commands.js
 const express = require("express");
-const fs = require("fs");
-const path = require("path");
 const router = express.Router();
-const { logCoinEntry, readVaultLog } = require("./vaultkeeperHelper");
+const { logCoinEntry, calculateVaultBalance } = require("./vaultkeeper");
 
-// ===== CONFIGURABLE SERVICES =====
+// Configurable services and their keywords
 const services = [
-  { name: "Ship Repair", keywords: ["repair", "fixship", "shiprepair"], description: "Fix your ship and keep it seaworthy." },
-  { name: "Treasure Map Access", keywords: ["map", "treasuremap", "treasure"], description: "Get exclusive access to treasure maps." },
-  { name: "Rum Supply", keywords: ["rum", "drink", "beverage"], description: "Order barrels of fine rum." },
-  { name: "CV Writing", keywords: ["cv", "resume", "curriculum"], description: "Professional CV writing and editing." },
-  { name: "Logo Design", keywords: ["logo", "branding"], description: "Get a unique logo for your brand." },
-  { name: "Website Development", keywords: ["website", "web", "site"], description: "Build a sleek website for your business." },
-  { name: "Marketing Services", keywords: ["marketing", "ads", "promotion"], description: "Boost your brand with marketing." },
-  { name: "Reddit Content Creation", keywords: ["reddit", "content", "posts"], description: "High-quality Reddit posts and comments." },
-  { name: "Social Media Management", keywords: ["social", "media", "management"], description: "Manage your social profiles professionally." },
-  { name: "Legal Consultation", keywords: ["legal", "consult", "lawyer"], description: "Basic legal advice and consultation." }
+  { name: "Ship Repair", keywords: ["repair", "fixship", "shiprepair"] },
+  { name: "Treasure Map Access", keywords: ["map", "treasuremap"] },
+  { name: "Rum Supply", keywords: ["rum", "drink", "beverage"] },
+  // Add more services here
 ];
 
-// ===== SAFE FILE READ/WRITE =====
-function safeReadJSON(filePath) {
-  try {
-    if (!fs.existsSync(filePath)) return [];
-    const data = fs.readFileSync(filePath, "utf-8");
-    return JSON.parse(data);
-  } catch (err) {
-    console.error("⚠️ Failed to read JSON:", err);
-    return [];
-  }
-}
-
-function safeWriteJSON(filePath, data) {
-  try {
-    fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
-  } catch (err) {
-    console.error("⚠️ Failed to write JSON:", err);
-  }
-}
-
-// ===== SERVICE LOOKUP =====
+// Helper: find service by keyword
 function findServiceByKeyword(keyword) {
   return services.find(svc =>
     svc.keywords.some(kw => kw.toLowerCase() === keyword.toLowerCase())
   );
 }
 
-// ===== PAYMENT GENERATION =====
+// Generate unique payment reference and instructions
 function generatePaymentInstructions(serviceName, payer, amount) {
   const datePart = new Date().toISOString().slice(0, 10).replace(/-/g, "");
   const randomPart = Math.floor(10000 + Math.random() * 90000);
@@ -79,7 +52,7 @@ Use the Payment Reference exactly as it appears to ensure your payment is correc
   return { paymentReference, paymentInfo };
 }
 
-// ===== COMMAND HANDLER =====
+// POST /command
 router.post("/", (req, res) => {
   const { message } = req.body;
   if (!message) {
@@ -89,15 +62,6 @@ router.post("/", (req, res) => {
   const parts = message.trim().split(/\s+/);
   const cmd = parts[0].toLowerCase();
 
-  // === HELP COMMAND ===
-  if (cmd === "help") {
-    const serviceList = services.map(svc => `- ${svc.name}: ${svc.description}`).join("\n");
-    return res.json({
-      reply: `🦜 Blackbeard Services Available:\n${serviceList}\n\nTo get payment instructions, type:\npayment [service keyword] [your full name] [amount]\nExample: payment rum John Doe 150`
-    });
-  }
-
-  // === PAYMENT COMMAND ===
   if (cmd === "payment") {
     if (parts.length < 4) {
       return res.json({
@@ -116,7 +80,7 @@ router.post("/", (req, res) => {
 
     const service = findServiceByKeyword(serviceKeyword);
     if (!service) {
-      return res.json({ reply: `⚠️ Service keyword "${serviceKeyword}" not found. Use "help" to see available services.` });
+      return res.json({ reply: `⚠️ Service keyword "${serviceKeyword}" not found.` });
     }
 
     const { paymentReference, paymentInfo } = generatePaymentInstructions(
@@ -125,7 +89,6 @@ router.post("/", (req, res) => {
       amount
     );
 
-    // Log the payment request in vaultkeeper
     logCoinEntry({
       service: service.name,
       payer: payerName,
@@ -140,23 +103,26 @@ router.post("/", (req, res) => {
     });
   }
 
-  // === SHOW BALANCE COMMAND ===
   if (cmd === "balance") {
-    const log = readVaultLog();
-    const total = log.reduce((sum, entry) => sum + (Number(entry.amount) || 0), 0);
-    return res.json({ reply: `💰 Total coins in vault: R${total.toFixed(2)}` });
+    const balance = calculateVaultBalance();
+    return res.json({ reply: `💰 Current vault balance: R${balance.toFixed(2)}` });
   }
 
-  // === LIST SERVICES COMMAND ===
   if (cmd === "services") {
-    const list = services.map(svc => `${svc.name} (${svc.keywords[0]})`).join(", ");
-    return res.json({ reply: `Available services: ${list}` });
+    const list = services.map(s => s.name).join(", ");
+    return res.json({ reply: `🛠️ Available services: ${list}` });
   }
 
-  // === UNKNOWN COMMAND FALLBACK ===
-  return res.json({
-    reply: "⚠️ Unknown command. Type 'help' to see available commands."
-  });
+  // Basic chat replies for greetings and info
+  const lowerMsg = message.toLowerCase();
+  if (lowerMsg.includes("hello") || lowerMsg.includes("hi")) {
+    return res.json({ reply: "Ahoy! Captain Nicolaas at your service. How can I help you today?" });
+  }
+  if (lowerMsg.includes("help")) {
+    return res.json({ reply: "Send 'payment [service] [your name] [amount]' to get a payment link.\nTry 'services' to see available services." });
+  }
+
+  return res.json({ reply: "⚠️ Unknown command. Try 'help' or 'services'." });
 });
 
 module.exports = router;
