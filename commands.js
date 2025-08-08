@@ -87,6 +87,28 @@ Use the Payment Reference exactly as it appears to ensure your payment is correc
   return { paymentReference, paymentInfo };
 }
 
+// ===== CHAT BOT REPLY LOGIC =====
+function generateBotReply(message) {
+  const msg = message.toLowerCase();
+
+  if (msg.includes("hello") || msg.includes("hi")) {
+    return "Ahoy! Captain Nicolaas at your service. How can we assist you today?";
+  }
+  if (msg.includes("services")) {
+    return "We offer CV writing, logo design, website dev, marketing & more. Ask for a payment link!";
+  }
+  if (msg.includes("payment link")) {
+    return "Send 'payment <service keyword> <your full name> <amount>' to get your unique payment link.";
+  }
+  if (msg.includes("attract clients")) {
+    return `🏴‍☠️ Captain Nicolaas here! Need top-notch help with your projects? 
+Our Blackbeard bots deliver CVs, websites, apps, marketing & more! 
+Pay securely with unique links. DM us to get started! ⚓️`;
+  }
+  // Default fallback
+  return "Thanks for your message. We'll get back to you shortly.";
+}
+
 // ===== MAIN COMMAND HANDLER =====
 router.post("/", (req, res) => {
   const { message } = req.body;
@@ -131,10 +153,16 @@ router.post("/", (req, res) => {
     });
   }
 
-  // === CONFIRM PAYMENT
+  // === CONFIRM PAYMENT ===
+  // (Placeholder to avoid syntax errors; you can fill this in later)
+  // if (cmd === "confirmpayment") {
+  //   // Your confirm payment code here...
+  //   return res.json({ reply: "Confirm payment command received." });
+  // }
 
-// Your confirm payment code block here...
-
+  // === GENERAL CHAT REPLY (fallback) ===
+  const reply = generateBotReply(message);
+  return res.json({ reply });
 });
 
 module.exports = router;
