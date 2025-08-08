@@ -56,16 +56,4 @@ module.exports = [
   { name: "Email Quotation Setup", keywords: ["email quote", "quotation email"] },
   { name: "Brand Style Guide", keywords: ["brand guide", "style guide"] },
   { name: "Press Kit Prep", keywords: ["press kit", "media kit"] },
-  { name: "Product Photography", keywords: ["photo shoot", "product photo"] },
-  { name: "UX/UI Design", keywords: ["ux", "ui", "user experience"] },
-  { name: "Block Management", keywords: ["block manage"] },
-  { name: "Social Media Advertising", keywords: ["ads", "facebook ads"] },
-  { name: "Online Brand Monitoring", keywords: ["brand watch", "online watch"] },
-  { name: "eBook Creation", keywords: ["ebook", "digital book"] },
-  { name: "Presentation Design", keywords: ["presentation", "slides"] },
-  { name: "Technical Support", keywords: ["tech help", "support"] },
-  { name: "Data Backup", keywords: ["data backup", "backup"] },
-  { name: "Cloud Storage Setup", keywords: ["cloud setup", "storage"] },
-  { name: "Cybersecurity Assessment", keywords: ["cybersecurity", "security audit"] },
-  { name: "IT Infrastructure Setup", keywords: ["it setup", "infrastructure"] }
-];
+  { name: "Product Photography
