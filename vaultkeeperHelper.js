@@ -3,7 +3,7 @@ const path = require("path");
 
 const vaultLogFile = path.join(__dirname, "vault_log.json");
 
-// Safe read vault log file with schema validation
+// Safe read vault log
 function readVaultLog() {
   try {
     if (!fs.existsSync(vaultLogFile)) {
@@ -19,19 +19,17 @@ function readVaultLog() {
   }
 }
 
-// Safe write vault log file
+// Safe write vault log
 function writeVaultLog(log) {
   try {
-    if (!Array.isArray(log)) {
-      throw new Error("Vault log must be an array");
-    }
+    if (!Array.isArray(log)) throw new Error("Vault log must be an array");
     fs.writeFileSync(vaultLogFile, JSON.stringify(log, null, 2));
   } catch (err) {
     console.error("⚠️ Error writing vault log:", err);
   }
 }
 
-// Log a new coin transaction entry
+// Add transaction entry
 function logCoinEntry(entry) {
   if (!entry || typeof entry !== "object") {
     console.error("⚠️ Invalid vault entry:", entry);
