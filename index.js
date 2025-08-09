@@ -2,8 +2,9 @@ const express = require("express");
 const path = require("path");
 const cors = require("cors");
 
+// Import routers
 const commandsRouter = require("./commands");
-const vaultkeeper = require("./vaultkeeper"); // VaultKeeper router & helpers
+const vaultkeeperRouter = require("./vaultkeeper"); // Make sure this exports a router named 'router' or default export
 
 const app = express();
 const PORT = process.env.PORT || 10000;
@@ -15,7 +16,7 @@ app.use(express.static(path.join(__dirname, "public")));
 
 // Routes
 app.use("/command", commandsRouter);
-app.use("/vault", vaultkeeper.router);
+app.use("/vault", vaultkeeperRouter); // Use the imported vaultkeeper router directly
 
 // Root route
 app.get("/", (req, res) => {
