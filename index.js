@@ -1,5 +1,3 @@
-// index.js — Core server for Scorpio-X Blackbeard Empire
-
 const express = require("express");
 const path = require("path");
 const cors = require("cors");
@@ -16,26 +14,26 @@ app.use(express.json());
 // Enable CORS for all routes
 app.use(cors());
 
-// Serve static files from the "public" folder (for chat UI and others)
+// Serve static files from the "public" folder (for chat.html etc)
 app.use(express.static(path.join(__dirname, "public")));
 
-// Routes
+// Route handlers
 app.use("/command", commandsRouter);
 app.use("/", vaultkeeperRouter);
 
-// Basic root route: info message
+// Basic root route
 app.get("/", (req, res) => {
   res.send(
     "🦂 Scorpio-X Core Server is running. Visit /chat.html to chat with Blackbeard."
   );
 });
 
-// === CHATBOT API & WEB CHAT ===
+// ===== CHATBOT API & WEB CHAT =====
 
-// In-memory message store (for demo; replace with DB for production)
+// In-memory message store (demo only; replace with DB for production)
 const messages = [];
 
-// Simple bot auto-reply logic with smarter preset commands
+// Simple bot auto-reply logic with preset commands
 function generateBotReply(message) {
   const msg = message.toLowerCase();
 
@@ -65,7 +63,7 @@ app.post("/comms/message", (req, res) => {
     return res.status(400).json({ message: "Missing sender or message." });
   }
 
-  // Save message
+  // Save message in memory
   messages.push({
     sender,
     message,
