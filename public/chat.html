@@ -80,14 +80,18 @@
     padding: 0.5rem 1rem;
     font-size: 1rem;
     border: none;
-    background: #29a329;
+    background: #29a329; /* green */
     color: white;
     cursor: pointer;
     border-radius: 0 4px 4px 0;
     transition: background 0.2s;
+    user-select: none;
   }
   #send-btn:hover {
-    background: #3fdb3f;
+    background: #3fdb3f; /* lighter green */
+  }
+  #send-btn:active {
+    background: #248f24; /* darker green when pressed */
   }
   @keyframes fadeIn {
     from { opacity: 0; transform: translateY(5px); }
