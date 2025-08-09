@@ -1,4 +1,4 @@
-// index.js — Scorpio-X Core Server Bootstrapper
+// index.js — Core server for Scorpio-X Blackbeard Empire
 
 const express = require("express");
 const path = require("path");
@@ -16,7 +16,7 @@ app.use(express.json());
 // Enable CORS for all routes
 app.use(cors());
 
-// Serve static files from the "public" folder
+// Serve static files from the "public" folder (for chat UI and others)
 app.use(express.static(path.join(__dirname, "public")));
 
 // Routes
@@ -32,7 +32,7 @@ app.get("/", (req, res) => {
 
 // === CHATBOT API & WEB CHAT ===
 
-// In-memory message store (demo; replace with DB for production)
+// In-memory message store (for demo; replace with DB for production)
 const messages = [];
 
 // Simple bot auto-reply logic with smarter preset commands
