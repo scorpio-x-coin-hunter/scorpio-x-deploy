@@ -1,8 +1,10 @@
 const express = require("express");
+const fs = require("fs");
+const path = require("path");
 const router = express.Router();
 const { logCoinEntry } = require("./vaultkeeperHelper");
 
-// ===== CONFIGURABLE SERVICES =====
+// Configured services
 const services = [
   { name: "Ship Repair", keywords: ["repair", "fixship", "shiprepair"] },
   { name: "Treasure Map Access", keywords: ["map", "treasuremap"] },
@@ -15,14 +17,14 @@ const services = [
   { name: "Social Media Management", keywords: ["socialmedia", "social", "media"] },
 ];
 
-// ===== SERVICE LOOKUP =====
+// Find service by keyword
 function findServiceByKeyword(keyword) {
   return services.find((svc) =>
     svc.keywords.some((kw) => kw.toLowerCase() === keyword.toLowerCase())
   );
 }
 
-// ===== PAYMENT GENERATION =====
+// Generate payment instructions & log
 function generatePaymentInstructions(serviceName, payer, amount) {
   const datePart = new Date().toISOString().slice(0, 10).replace(/-/g, "");
   const randomPart = Math.floor(10000 + Math.random() * 90000);
@@ -54,10 +56,19 @@ Payment Reference: ${paymentReference}
 Use the Payment Reference exactly as it appears to ensure your payment is correctly recorded.
 `;
 
+  // Log payment request
+  logCoinEntry({
+    service: serviceName,
+    payer,
+    amount,
+    paymentLink: paymentReference,
+    confirmed: false,
+  });
+
   return { paymentReference, paymentInfo };
 }
 
-// ===== MAIN COMMAND HANDLER =====
+// Main command handler
 router.post("/", (req, res) => {
   const { message } = req.body;
   if (!message) {
@@ -67,7 +78,6 @@ router.post("/", (req, res) => {
   const parts = message.trim().split(/\s+/);
   const cmd = parts[0].toLowerCase();
 
-  // === PAYMENT COMMAND ===
   if (cmd === "payment") {
     if (parts.length < 4) {
       return res.json({
@@ -82,40 +92,4 @@ router.post("/", (req, res) => {
 
     if (isNaN(amount) || amount <= 0) {
       return res.json({
-        reply: "⚠️ Invalid amount. Please enter a valid number.",
-      });
-    }
-
-    const service = findServiceByKeyword(serviceKeyword);
-    if (!service) {
-      return res.json({
-        reply: `⚠️ Service keyword "${serviceKeyword}" not found.`,
-      });
-    }
-
-    const { paymentReference, paymentInfo } = generatePaymentInstructions(
-      service.name,
-      payerName,
-      amount
-    );
-
-    // Log payment request in VaultKeeper
-    logCoinEntry({
-      service: service.name,
-      payer: payerName,
-      amount,
-      paymentLink: paymentReference,
-      confirmed: false,
-    });
-
-    return res.json({
-      reply: `🪙 Payment instructions for ${service.name}:`,
-      paymentInfo,
-    });
-  }
-
-  // Fallback reply
-  res.json({ reply: "⚠️ Unknown command. Please try again." });
-});
-
-module.exports = router;
+        reply: "⚠️ Invalid amount. Please enter a valid
