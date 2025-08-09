@@ -1,6 +1,6 @@
+// commands.js — Handles service commands and payment generation
+
 const express = require("express");
-const fs = require("fs");
-const path = require("path");
 const router = express.Router();
 const { logCoinEntry } = require("./vaultkeeperHelper");
 
