@@ -1,4 +1,4 @@
-// vaultkeeperHelper.js — Vault log read/write and coin management
+// vaultkeeperHelper.js — Helper module for VaultKeeper logging and file management
 
 const fs = require("fs");
 const path = require("path");
@@ -9,6 +9,7 @@ const vaultLogFile = path.join(__dirname, "vault_log.json");
 function readVaultLog() {
   try {
     if (!fs.existsSync(vaultLogFile)) {
+      // Create empty vault log if it doesn't exist
       fs.writeFileSync(vaultLogFile, JSON.stringify([], null, 2));
       return [];
     }
@@ -53,15 +54,8 @@ function logCoinEntry(entry) {
   console.log("💰 VaultKeeper logged entry:", entry);
 }
 
-// ===== CALCULATE BALANCE =====
-function calculateVaultBalance() {
-  const log = readVaultLog();
-  return log.reduce((sum, entry) => sum + (Number(entry.amount) || 0), 0);
-}
-
 module.exports = {
   readVaultLog,
   writeVaultLog,
   logCoinEntry,
-  calculateVaultBalance,
 };
