@@ -1,5 +1,3 @@
-// commands.js — Handles service commands and payment generation
-
 const express = require("express");
 const router = express.Router();
 const { logCoinEntry } = require("./vaultkeeperHelper");
@@ -101,7 +99,7 @@ router.post("/", (req, res) => {
       amount
     );
 
-    // Log payment request
+    // Log payment request in VaultKeeper
     logCoinEntry({
       service: service.name,
       payer: payerName,
