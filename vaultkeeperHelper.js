@@ -1,3 +1,5 @@
+// vaultkeeperHelper.js — Helper functions for vault log file management
+
 const fs = require("fs");
 const path = require("path");
 
@@ -7,11 +9,13 @@ const vaultLogFile = path.join(__dirname, "vault_log.json");
 function readVaultLog() {
   try {
     if (!fs.existsSync(vaultLogFile)) {
+      // If file missing, create empty log file
       fs.writeFileSync(vaultLogFile, JSON.stringify([], null, 2));
       return [];
     }
     const data = fs.readFileSync(vaultLogFile, "utf8");
-    return Array.isArray(JSON.parse(data)) ? JSON.parse(data) : [];
+    const parsed = JSON.parse(data);
+    return Array.isArray(parsed) ? parsed : [];
   } catch (err) {
     console.error("⚠️ Error reading vault log, resetting file:", err);
     fs.writeFileSync(vaultLogFile, JSON.stringify([], null, 2));
