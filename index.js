@@ -1,6 +1,9 @@
+// index.js — Scorpio-X Core Server Bootstrapper
+
 const express = require("express");
 const path = require("path");
 const cors = require("cors");
+
 const commandsRouter = require("./commands");
 const vaultkeeperRouter = require("./vaultkeeper");
 
