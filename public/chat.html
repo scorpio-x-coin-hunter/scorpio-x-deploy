@@ -46,6 +46,7 @@
     border-radius: 6px;
     max-width: 85%;
     animation: fadeIn 0.2s ease-in;
+    word-wrap: break-word;
   }
   .message.user {
     background: #004466;
@@ -61,6 +62,7 @@
     font-size: 0.75rem;
     opacity: 0.6;
     margin-top: 0.25rem;
+    text-align: right;
   }
   #input-form {
     display: flex;
@@ -95,4 +97,78 @@
 </head>
 <body>
   <div id="chat-container">
-    <h2>⚓ Blackbeard Chat
+    <h2>⚓ Blackbeard Chat Bot</h2>
+    <div id="messages"></div>
+    <form id="input-form">
+      <input type="text" id="input-msg" placeholder="Send your message here..." autocomplete="off" required />
+      <button type="submit" id="send-btn">Send</button>
+    </form>
+  </div>
+
+<script>
+  const messagesDiv = document.getElementById("messages");
+  const form = document.getElementById("input-form");
+  const input = document.getElementById("input-msg");
+
+  // Format timestamp nicely
+  function formatTimestamp(dateStr) {
+    const d = new Date(dateStr);
+    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
+
+  // Add message to chat
+  function addMessage(text, sender, timestamp = new Date().toISOString()) {
+    const msgDiv = document.createElement("div");
+    msgDiv.classList.add("message", sender);
+    msgDiv.textContent = text;
+
+    const timeDiv = document.createElement("div");
+    timeDiv.classList.add("timestamp");
+    timeDiv.textContent = formatTimestamp(timestamp);
+
+    msgDiv.appendChild(timeDiv);
+    messagesDiv.appendChild(msgDiv);
+
+    messagesDiv.scrollTop = messagesDiv.scrollHeight; // scroll down
+  }
+
+  // Send message to backend and get bot reply
+  async function sendMessage(message) {
+    addMessage(message, "user");
+
+    try {
+      const response = await fetch("/comms/message", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sender: "client", message }),
+      });
+
+      if (!response.ok) throw new Error("Network response not ok");
+      const data = await response.json();
+
+      if (data.reply) {
+        addMessage(data.reply, "bot");
+      } else {
+        addMessage("⚠️ No reply from server.", "bot");
+      }
+    } catch (err) {
+      addMessage("⚠️ Error communicating with server.", "bot");
+      console.error(err);
+    }
+  }
+
+  // Handle form submit
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const msg = input.value.trim();
+    if (msg.length === 0) return;
+    sendMessage(msg);
+    input.value = "";
+    input.focus();
+  });
+
+  // Optional: greet on page load
+  addMessage("Ahoy! Captain Nicolaas at your service. How can I help you today?", "bot");
+</script>
+</body>
+</html>
