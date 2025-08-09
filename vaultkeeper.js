@@ -1,17 +1,16 @@
-// vaultkeeper.js — Router for vault-related commands and payment handling
+// vaultkeeper.js — Main VaultKeeper router for handling payment commands
 
 const express = require("express");
 const path = require("path");
 const router = express.Router();
 
 const {
+  logCoinEntry,
   readVaultLog,
   writeVaultLog,
-  logCoinEntry,
-  calculateVaultBalance,
 } = require("./vaultkeeperHelper");
 
-// Services available
+// ===== CONFIGURED SERVICES =====
 const services = [
   { name: "Ship Repair", keywords: ["repair", "fixship", "shiprepair"] },
   { name: "Treasure Map Access", keywords: ["map", "treasuremap"] },
@@ -24,14 +23,14 @@ const services = [
   { name: "Social Media Management", keywords: ["socialmedia", "social", "media"] },
 ];
 
-// Find service by keyword helper
+// ===== SERVICE LOOKUP BY KEYWORD =====
 function findServiceByKeyword(keyword) {
   return services.find((svc) =>
     svc.keywords.some((kw) => kw.toLowerCase() === keyword.toLowerCase())
   );
 }
 
-// Generate payment instructions and reference
+// ===== PAYMENT INSTRUCTION GENERATION =====
 function generatePaymentInstructions(serviceName, payer, amount) {
   const datePart = new Date().toISOString().slice(0, 10).replace(/-/g, "");
   const randomPart = Math.floor(10000 + Math.random() * 90000);
@@ -66,9 +65,10 @@ Use the Payment Reference exactly as it appears to ensure your payment is correc
   return { paymentReference, paymentInfo };
 }
 
-// Main POST route to handle vaultkeeper commands
+// ===== ROUTER POST: HANDLE PAYMENT AND CONFIRMATION COMMANDS =====
 router.post("/", express.json(), (req, res) => {
   const { message } = req.body;
+
   if (!message) {
     return res.json({ reply: "⚠️ Please send a valid command message." });
   }
@@ -76,7 +76,7 @@ router.post("/", express.json(), (req, res) => {
   const parts = message.trim().split(/\s+/);
   const cmd = parts[0].toLowerCase();
 
-  // Handle payment command
+  // === PAYMENT COMMAND ===
   if (cmd === "payment") {
     if (parts.length < 4) {
       return res.json({
@@ -108,7 +108,7 @@ router.post("/", express.json(), (req, res) => {
       amount
     );
 
-    // Log the payment entry (not confirmed yet)
+    // Log the payment entry (unconfirmed at this stage)
     logCoinEntry({
       service: service.name,
       payer: payerName,
@@ -123,7 +123,7 @@ router.post("/", express.json(), (req, res) => {
     });
   }
 
-  // Confirm payment command
+  // === CONFIRM PAYMENT COMMAND ===
   if (cmd === "confirm" && parts[1]?.toLowerCase() === "payment") {
     if (parts.length < 3) {
       return res.json({
@@ -133,14 +133,14 @@ router.post("/", express.json(), (req, res) => {
 
     const paymentRef = parts.slice(2).join("");
     const log = readVaultLog();
-
     const found = log.find((entry) => entry.paymentLink === paymentRef);
+
     if (!found) {
       return res.json({ reply: `⚠️ Payment reference ${paymentRef} not found.` });
     }
 
     if (found.confirmed) {
-      return res.json({ reply: `Payment reference ${paymentRef} is already confirmed.` });
+      return res.json({ reply: `✅ Payment reference ${paymentRef} was already confirmed.` });
     }
 
     found.confirmed = true;
@@ -151,9 +151,12 @@ router.post("/", express.json(), (req, res) => {
     });
   }
 
-  // Fallback for unknown commands
+  // Fallback unknown command
   return res.json({
-    reply: `⚓️ I only understand 'payment' and 'confirm payment' commands. Please try again.`,
+    reply:
+      `⚓ Arrr, Captain! I only understand these commands:\n` +
+      `- payment [service keyword] [your full name] [amount]\n` +
+      `- confirm payment [payment reference code]`,
   });
 });
 
