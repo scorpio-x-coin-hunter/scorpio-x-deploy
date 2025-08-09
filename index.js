@@ -3,37 +3,30 @@ const path = require("path");
 const cors = require("cors");
 
 const commandsRouter = require("./commands");
-const vaultkeeperRouter = require("./vaultkeeper");
+const vaultkeeper = require("./vaultkeeper"); // VaultKeeper router & helpers
 
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-// Middleware to parse JSON request bodies
+// Middleware
 app.use(express.json());
-
-// Enable CORS for all routes
 app.use(cors());
-
-// Serve static files from the "public" folder (for chat.html etc)
 app.use(express.static(path.join(__dirname, "public")));
 
-// Route handlers
+// Routes
 app.use("/command", commandsRouter);
-app.use("/", vaultkeeperRouter);
+app.use("/vault", vaultkeeper.router);
 
-// Basic root route
+// Root route
 app.get("/", (req, res) => {
   res.send(
     "🦂 Scorpio-X Core Server is running. Visit /chat.html to chat with Blackbeard."
   );
 });
 
-// ===== CHATBOT API & WEB CHAT =====
-
-// In-memory message store (demo only; replace with DB for production)
+// === CHATBOT API & WEB CHAT ===
 const messages = [];
 
-// Simple bot auto-reply logic with preset commands
 function generateBotReply(message) {
   const msg = message.toLowerCase();
 
@@ -55,7 +48,7 @@ Pay securely with unique links. DM us to get started! ⚓️`;
   return "Thanks for your message. We'll get back to you shortly.";
 }
 
-// Endpoint to receive client messages (users or bots)
+// Receive messages API
 app.post("/comms/message", (req, res) => {
   const { sender, message } = req.body;
 
@@ -63,7 +56,6 @@ app.post("/comms/message", (req, res) => {
     return res.status(400).json({ message: "Missing sender or message." });
   }
 
-  // Save message in memory
   messages.push({
     sender,
     message,
@@ -72,23 +64,21 @@ app.post("/comms/message", (req, res) => {
 
   console.log(`📡 Message received from ${sender}: ${message}`);
 
-  // Generate bot reply
   const reply = generateBotReply(message);
-
   res.json({ reply });
 });
 
-// Endpoint to get all messages (for monitoring/debugging)
+// Get all messages API
 app.get("/comms/messages", (req, res) => {
   res.json({ messages });
 });
 
-// Catch-all 404 handler for unknown routes
+// 404 fallback
 app.use((req, res) => {
   res.status(404).send("⚠️ 404 Not Found");
 });
 
-// Start the server
+// Start server
 app.listen(PORT, () => {
   console.log(`🛰️ Scorpio-X Core Server running on port ${PORT}`);
 });
